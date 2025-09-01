@@ -22,6 +22,10 @@
 .square {
     width: 100px;
     height: 100px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
 .white {
@@ -29,5 +33,14 @@
 }
 
 .black {
-    background: black;
+    background: rgb(100, 100, 100);
+}
+
+img {
+    width: 90px;
+    height: 90px;
+}
+
+img:hover {
+    cursor: pointer;
 }

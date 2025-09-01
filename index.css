@@ -5,3 +5,29 @@
     padding: 0;
     box-sizing: border-box;
 }
+
+#board {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+}
+
+.row {
+    display: flex;
+}
+
+.square {
+    width: 100px;
+    height: 100px;
+}
+
+.white {
+    background: rgb(232, 232, 232);
+}
+
+.black {
+    background: black;
+}

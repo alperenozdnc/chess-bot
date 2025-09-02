@@ -1,16 +1,30 @@
+const INITIAL_POSITION = "5rk1/pp2qppp/8/2p1p3/8/PbPr2NP/1Pn1NPP1/RQK4R";
+
+let isBoardFlipped = false;
+
+const flipButton = document.getElementById("flip-button");
+
+flipButton.addEventListener("click", () => {
+    isBoardFlipped = !isBoardFlipped
+
+    drawBoardfromFEN(isBoardFlipped ? INITIAL_POSITION.split("").reverse().join("") : INITIAL_POSITION);
+});
+
 function drawBoardfromFEN(FEN) {
     // r rook n knight k king q queen b bishop p pawn
     // if uppercase, its white, lowercase its black
     // a number indicates the amount of spaces after the piece
 
-    const BOARD_ELEMENT = document.getElementById("board");
+    const BOARD_ELEMENT = document.getElementById("board-wrapper");
+
+    BOARD_ELEMENT.innerHTML = "";
 
     let squareColor = 0;
     let FENIdx = 0;
 
     for (let row = 0; row < 8; ++row) {
         const ROW_ELEMENT = document.createElement(`div`);
-        ROW_ELEMENT.id = `row-${row}`;
+        ROW_ELEMENT.id = `row - ${row}`;
         ROW_ELEMENT.className = "row";
 
         BOARD_ELEMENT.appendChild(ROW_ELEMENT);
@@ -19,7 +33,7 @@ function drawBoardfromFEN(FEN) {
 
         for (let square = 0; square < 8; ++square) {
             const SQUARE_ELEMENT = document.createElement(`div`);
-            SQUARE_ELEMENT.id = `square-${square}`;
+            SQUARE_ELEMENT.id = `square - ${square}`;
             SQUARE_ELEMENT.className = `square ${squareColor % 2 == 0 ? "white" : "black"}`
 
             if (square !== 7) ++squareColor;
@@ -28,8 +42,6 @@ function drawBoardfromFEN(FEN) {
 
             if (FENIdx < FEN.length) {
                 if (FEN[FENIdx] == "/") FENIdx++;
-
-                console.log(spacesLeft);
 
                 if (spacesLeft > 0) {
                     spacesLeft--;
@@ -52,7 +64,5 @@ function drawBoardfromFEN(FEN) {
         }
     }
 }
-
-const INITIAL_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
 
 drawBoardfromFEN(INITIAL_POSITION);

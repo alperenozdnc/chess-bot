@@ -53,6 +53,6 @@ function drawBoardfromFEN(FEN) {
     }
 }
 
-const INITIAL_POSITION = "8/5k2/3p4/1p1Pp2p/pP2Pp1P/P4P1K/8/8";
+const INITIAL_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR"
 
 drawBoardfromFEN(INITIAL_POSITION);

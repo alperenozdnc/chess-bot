@@ -11,10 +11,6 @@ flipButton.addEventListener("click", () => {
 });
 
 function drawBoardfromFEN(FEN) {
-    // r rook n knight k king q queen b bishop p pawn
-    // if uppercase, its white, lowercase its black
-    // a number indicates the amount of spaces after the piece
-
     const BOARD_ELEMENT = document.getElementById("board-wrapper");
 
     BOARD_ELEMENT.innerHTML = "";
@@ -52,6 +48,13 @@ function drawBoardfromFEN(FEN) {
                         const IMAGE_ELEMENT = document.createElement("img");
 
                         IMAGE_ELEMENT.src = `./assets/${piece}.png`
+                        IMAGE_ELEMENT.draggable = false
+
+                        IMAGE_ELEMENT.addEventListener("drag", e => {
+                            e.preventDefault();
+
+                            console.log(e.target);
+                        });
 
                         SQUARE_ELEMENT.appendChild(IMAGE_ELEMENT);
                     } else {

@@ -1,4 +1,4 @@
-const INITIAL_POSITION = "5rk1/pp2qppp/8/2p1p3/8/PbPr2NP/1Pn1NPP1/RQK4R";
+const INITIAL_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
 let isBoardFlipped = false;
 

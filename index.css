@@ -21,6 +21,7 @@
     align-items: center;
     flex-direction: column;
     justify-content: center;
+    user-select: none;
 }
 
 .flip {
@@ -55,4 +56,12 @@ img {
 
 img:hover {
     cursor: pointer;
+}
+
+.dragged {
+    position: absolute;
+    z-index: 1000;
+    cursor: pointer;
+    pointer-events: none;
+    opacity: 1;
 }

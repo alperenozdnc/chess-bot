@@ -11,9 +11,9 @@ flipButton.addEventListener("click", () => {
 });
 
 function drawBoardfromFEN(FEN) {
-    const BOARD_ELEMENT = document.getElementById("board-wrapper");
+    const BOARD = document.getElementById("board-wrapper");
 
-    BOARD_ELEMENT.innerHTML = "";
+    BOARD.innerHTML = "";
 
     let squareColor = 0;
     let FENIdx = 0;
@@ -23,7 +23,7 @@ function drawBoardfromFEN(FEN) {
         ROW_ELEMENT.id = `row - ${row}`;
         ROW_ELEMENT.className = "row";
 
-        BOARD_ELEMENT.appendChild(ROW_ELEMENT);
+        BOARD.appendChild(ROW_ELEMENT);
 
         let spacesLeft = 0;
 
@@ -46,15 +46,12 @@ function drawBoardfromFEN(FEN) {
 
                     if (isNaN(piece)) {
                         const IMAGE_ELEMENT = document.createElement("img");
+                        IMAGE_ELEMENT.src = `./assets/${piece}.png`;
 
-                        IMAGE_ELEMENT.src = `./assets/${piece}.png`
-                        IMAGE_ELEMENT.draggable = false
+                        IMAGE_ELEMENT.dataset.color = piece.toLowerCase() === piece ? "black" : "white";
 
-                        IMAGE_ELEMENT.addEventListener("drag", e => {
-                            e.preventDefault();
-
-                            console.log(e.target);
-                        });
+                        IMAGE_ELEMENT.className = "piece";
+                        IMAGE_ELEMENT.draggable = false;
 
                         SQUARE_ELEMENT.appendChild(IMAGE_ELEMENT);
                     } else {
@@ -69,3 +66,75 @@ function drawBoardfromFEN(FEN) {
 }
 
 drawBoardfromFEN(INITIAL_POSITION);
+
+let draggedPiece;
+let originalSquare;
+
+let offsetX = 0;
+let offsetY = 0;
+
+let moveIdx = 0;
+
+document.addEventListener("mousedown", (e) => {
+    if (e.target.classList.contains("piece")) {
+        draggedPiece = e.target;
+        originalSquare = draggedPiece.parentElement;
+
+        const rect = draggedPiece.getBoundingClientRect();
+
+        offsetX = e.clientX - rect.left;
+        offsetY = e.clientY - rect.top;
+
+        draggedPiece.classList.add("dragged");
+
+        document.body.appendChild(draggedPiece);
+        moveAt(e.pageX, e.pageY);
+    }
+
+    function moveAt(pageX, pageY) {
+        draggedPiece.style.left = `${pageX - offsetX}px`;
+        draggedPiece.style.top = `${pageY - offsetY}px`;
+    }
+
+    document.addEventListener("mousemove", onMouseMove);
+
+    function onMouseMove(e) {
+        moveAt(e.pageX, e.pageY);
+    }
+
+    function resetDraggedPieceStyles(draggedPiece) {
+        draggedPiece.classList.remove("dragged");
+        draggedPiece.style.left = "";
+        draggedPiece.style.top = "";
+    }
+
+    document.addEventListener("mouseup", function onMouseUp(e) {
+        if (draggedPiece) {
+            const target = document.elementFromPoint(e.clientX, e.clientY);
+
+            if (!target) return;
+
+            let pieceCanMove = false;
+            const pieceColor = draggedPiece.dataset.color;
+
+            if (pieceColor === "white") {
+                if (moveIdx % 2 === 0) pieceCanMove = true;
+            } else {
+                if (moveIdx % 2 !== 0) pieceCanMove = true;
+            }
+
+            if (target.classList.contains("square") && pieceCanMove && target.innerHTML === "" && target !== originalSquare) {
+                ++moveIdx;
+                target.appendChild(draggedPiece);
+            } else {
+                originalSquare.appendChild(draggedPiece);
+            }
+
+            resetDraggedPieceStyles(draggedPiece);
+        }
+
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+    });
+});
+

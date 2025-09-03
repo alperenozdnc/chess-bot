@@ -1,3 +1,4 @@
+const FILES = "abcdefgh".split("");
 const INITIAL_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
 
 let isBoardFlipped = false;
@@ -7,10 +8,10 @@ const flipButton = document.getElementById("flip-button");
 flipButton.addEventListener("click", () => {
     isBoardFlipped = !isBoardFlipped
 
-    drawBoardfromFEN(isBoardFlipped ? INITIAL_POSITION.split("").reverse().join("") : INITIAL_POSITION);
+    drawBoardfromFEN(isBoardFlipped ? INITIAL_POSITION.split("").reverse().join("") : INITIAL_POSITION, isBoardFlipped);
 });
 
-function drawBoardfromFEN(FEN) {
+function drawBoardfromFEN(FEN, isBoardFlipped = false) {
     const BOARD = document.getElementById("board-wrapper");
 
     BOARD.innerHTML = "";
@@ -32,6 +33,12 @@ function drawBoardfromFEN(FEN) {
             SQUARE_ELEMENT.id = `square - ${square}`;
             SQUARE_ELEMENT.className = `square ${squareColor % 2 == 0 ? "white" : "black"}`
 
+            if (isBoardFlipped) {
+                SQUARE_ELEMENT.dataset.pos = `${FILES[8 - square - 1]}${row + 1}`
+            } else {
+                SQUARE_ELEMENT.dataset.pos = `${FILES[square]}${8 - row}`
+            }
+
             if (square !== 7) ++squareColor;
 
             ROW_ELEMENT.appendChild(SQUARE_ELEMENT);
@@ -49,6 +56,7 @@ function drawBoardfromFEN(FEN) {
                         IMAGE_ELEMENT.src = `./assets/${piece}.png`;
 
                         IMAGE_ELEMENT.dataset.color = piece.toLowerCase() === piece ? "black" : "white";
+                        IMAGE_ELEMENT.dataset.pieceid = piece.toLowerCase();
 
                         IMAGE_ELEMENT.className = "piece";
                         IMAGE_ELEMENT.draggable = false;
@@ -124,6 +132,14 @@ document.addEventListener("mousedown", (e) => {
             }
 
             if (target.classList.contains("square") && pieceCanMove && target.innerHTML === "" && target !== originalSquare) {
+                pieceid = draggedPiece.dataset.pieceid.toUpperCase();
+                pos = target.dataset.pos;
+
+                let notation = pos;
+                if (pieceid !== "P") notation = `${pieceid}${notation}`;
+
+                console.log(notation);
+
                 ++moveIdx;
                 target.appendChild(draggedPiece);
             } else {

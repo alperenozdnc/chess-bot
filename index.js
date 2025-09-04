@@ -151,7 +151,6 @@ async function checkLegality(data) {
     switch (ID) {
         case "p":
             // todo: en passant
-            // todo: promotion
 
             dd = Math.abs(rankA - rankB);
 

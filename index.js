@@ -115,8 +115,6 @@ function checkLegality(data) {
             // todo: en passant
             dd = Math.abs(rankA - rankB);
 
-            console.log(Math.abs(fileA - fileB));
-
             if (!isCapturing && fileA !== fileB) { console.error("cant change files when not capturing"); return false };
             if (isCapturing && fileA === fileB) { console.error("cant stay on the same file while capturing"); return false };
             if (isCapturing && rankA === rankB) { console.error("cant stay on the same rank while capturing"); return false };

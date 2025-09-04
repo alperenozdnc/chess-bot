@@ -57,6 +57,7 @@ function drawBoardfromFEN(FEN, isBoardFlipped = false) {
 
                         IMAGE_ELEMENT.dataset.color = piece.toLowerCase() === piece ? "black" : "white";
                         IMAGE_ELEMENT.dataset.pieceid = piece.toLowerCase();
+                        IMAGE_ELEMENT.dataset.move_count = 0;
 
                         IMAGE_ELEMENT.className = "piece";
                         IMAGE_ELEMENT.draggable = false;
@@ -74,6 +75,69 @@ function drawBoardfromFEN(FEN, isBoardFlipped = false) {
 }
 
 drawBoardfromFEN(INITIAL_POSITION);
+
+function checkLegality(data) {
+    const { ID, color, pieceMoveCount, startSquare, destinationSquare } = data;
+
+    let isMoveLegal = true;
+
+    const posA = startSquare.dataset.pos;
+    const posB = destinationSquare.dataset.pos;
+
+    console.log(posA, posB);
+
+    const fileA = posA[0];
+    const rankA = posA[1];
+
+    const fileB = posB[0];
+    const rankB = posB[1];
+
+    let is_capturing = false;
+
+    if (destinationSquare.innerHTML !== "") {
+        const capturedPiece = destinationSquare.children[0];
+
+        if (color === capturedPiece.dataset.color) {
+            console.error("you cant capture your own piece");
+            return false;
+        }
+
+        if (capturedPiece.dataset.pieceid === "k") {
+            console.error("you cant capture a king");
+            return false;
+        }
+
+        is_capturing = true;
+    }
+
+    switch (ID) {
+        case "p":
+            // todo: en passant
+            // can only change ONE file when capturing
+            dd = Math.abs(+rankA - +rankB);
+
+            if (!is_capturing && fileA !== fileB) { console.error("cant change files when not capturing"); return false };
+            if (is_capturing && fileA === fileB) { console.error("cant stay on the same file while capturing"); return false };
+            if (color === "white" && +rankA > +rankB) { console.error("cant decrease rank as white"); return false };
+            if (color === "black" && +rankA < +rankB) { console.error("cant increase rank as black"); return false };
+            if (dd > 2) { console.error("cant move for more than 2 squares"); return false; }
+            if (pieceMoveCount > 0 && dd > 1) { console.error("cant move more than 1 square after first move"); return false; }
+
+            break
+        case "n":
+            break
+        case "b":
+            break
+        case "r":
+            break
+        case "q":
+            break
+        case "k":
+            break
+    }
+
+    return isMoveLegal;
+}
 
 let draggedPiece;
 let originalSquare;
@@ -118,7 +182,8 @@ document.addEventListener("mousedown", (e) => {
 
     document.addEventListener("mouseup", function onMouseUp(e) {
         if (draggedPiece) {
-            const target = document.elementFromPoint(e.clientX, e.clientY);
+            let target = document.elementFromPoint(e.clientX, e.clientY);
+            target = target.classList.contains("piece") ? target.parentElement : target;
 
             if (!target) return;
 
@@ -131,16 +196,26 @@ document.addEventListener("mousedown", (e) => {
                 if (moveIdx % 2 !== 0) pieceCanMove = true;
             }
 
-            if (target.classList.contains("square") && pieceCanMove && target.innerHTML === "" && target !== originalSquare) {
-                pieceid = draggedPiece.dataset.pieceid.toUpperCase();
-                pos = target.dataset.pos;
+            let pieceid = draggedPiece.dataset.pieceid.toUpperCase();
+
+            let isMoveLegal = checkLegality({
+                ID: pieceid.toLowerCase(),
+                color: pieceColor,
+                pieceMoveCount: draggedPiece.dataset.move_count,
+                startSquare: originalSquare,
+                destinationSquare: target
+            });
+
+            if (target.classList.contains("square") && pieceCanMove && target !== originalSquare && isMoveLegal) {
+                let pos = target.dataset.pos;
 
                 let notation = pos;
                 if (pieceid !== "P") notation = `${pieceid}${notation}`;
 
-                console.log(notation);
+                draggedPiece.dataset.move_count = +draggedPiece.dataset.move_count + 1;
 
                 ++moveIdx;
+                target.innerHTML = "";
                 target.appendChild(draggedPiece);
             } else {
                 originalSquare.appendChild(draggedPiece);

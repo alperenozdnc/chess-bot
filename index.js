@@ -1,5 +1,7 @@
 const FILES = "abcdefgh".split("");
 const INITIAL_POSITION = "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR";
+const captureSound = new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/capture.mp3");
+const moveSound = new Audio("https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3");
 
 let isBoardFlipped = false;
 
@@ -92,7 +94,7 @@ function checkLegality(data) {
     const fileB = posB[0];
     const rankB = posB[1];
 
-    let is_capturing = false;
+    let isCapturing = false;
 
     if (destinationSquare.innerHTML !== "") {
         const capturedPiece = destinationSquare.children[0];
@@ -107,7 +109,7 @@ function checkLegality(data) {
             return false;
         }
 
-        is_capturing = true;
+        isCapturing = true;
     }
 
     switch (ID) {
@@ -116,8 +118,8 @@ function checkLegality(data) {
             // can only change ONE file when capturing
             dd = Math.abs(+rankA - +rankB);
 
-            if (!is_capturing && fileA !== fileB) { console.error("cant change files when not capturing"); return false };
-            if (is_capturing && fileA === fileB) { console.error("cant stay on the same file while capturing"); return false };
+            if (!isCapturing && fileA !== fileB) { console.error("cant change files when not capturing"); return false };
+            if (isCapturing && fileA === fileB) { console.error("cant stay on the same file while capturing"); return false };
             if (color === "white" && +rankA > +rankB) { console.error("cant decrease rank as white"); return false };
             if (color === "black" && +rankA < +rankB) { console.error("cant increase rank as black"); return false };
             if (dd > 2) { console.error("cant move for more than 2 squares"); return false; }
@@ -136,7 +138,7 @@ function checkLegality(data) {
             break
     }
 
-    return isMoveLegal;
+    return { isMoveLegal, isCapturing };
 }
 
 let draggedPiece;
@@ -198,13 +200,15 @@ document.addEventListener("mousedown", (e) => {
 
             let pieceid = draggedPiece.dataset.pieceid.toUpperCase();
 
-            let isMoveLegal = checkLegality({
+            const { isMoveLegal, isCapturing } = checkLegality({
                 ID: pieceid.toLowerCase(),
                 color: pieceColor,
                 pieceMoveCount: draggedPiece.dataset.move_count,
                 startSquare: originalSquare,
                 destinationSquare: target
             });
+
+            console.log({ isMoveLegal, isCapturing });
 
             if (target.classList.contains("square") && pieceCanMove && target !== originalSquare && isMoveLegal) {
                 let pos = target.dataset.pos;
@@ -217,6 +221,12 @@ document.addEventListener("mousedown", (e) => {
                 ++moveIdx;
                 target.innerHTML = "";
                 target.appendChild(draggedPiece);
+
+                if (isCapturing) {
+                    captureSound.play();
+                } else {
+                    moveSound.play();
+                }
             } else {
                 originalSquare.appendChild(draggedPiece);
             }

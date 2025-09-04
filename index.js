@@ -13,6 +13,12 @@ flipButton.addEventListener("click", () => {
     drawBoardfromFEN(isBoardFlipped ? INITIAL_POSITION.split("").reverse().join("") : INITIAL_POSITION, isBoardFlipped);
 });
 
+function resetDraggedPieceStyles(draggedPiece) {
+    draggedPiece.classList.remove("dragged");
+    draggedPiece.style.left = "";
+    draggedPiece.style.top = "";
+}
+
 function drawBoardfromFEN(FEN, isBoardFlipped = false) {
     const BOARD = document.getElementById("board-wrapper");
 
@@ -78,7 +84,38 @@ function drawBoardfromFEN(FEN, isBoardFlipped = false) {
 
 drawBoardfromFEN(INITIAL_POSITION);
 
-function checkLegality(data) {
+async function getPromotionSelection(color) {
+    const PROMOTION_SCREEN = document.getElementById("promotion-screen");
+    const PROMOTION_PIECES = ["q", "r", "n", "b"];
+    const PROMOTION_PIECES_ELEMENTS = PROMOTION_SCREEN.querySelectorAll(".piece-selection");
+
+    PROMOTION_SCREEN.classList.add("promotion-screen-visible");
+
+    PROMOTION_PIECES.forEach((piece, idx) => {
+        let pieceID = color === "black" ? piece : piece.toUpperCase();
+
+        const IMAGE_ELEMENT = document.createElement("img");
+        IMAGE_ELEMENT.src = `./assets/${pieceID}.png`;
+        IMAGE_ELEMENT.draggable = false;
+        IMAGE_ELEMENT.classList.add("promotion-piece");
+
+        PROMOTION_PIECES_ELEMENTS[idx].appendChild(IMAGE_ELEMENT);
+    });
+
+    const selectionPromise = new Promise((resolve) => {
+        PROMOTION_PIECES_ELEMENTS.forEach(button => {
+            button.addEventListener("click", () => {
+                resolve(button.dataset.id);
+
+                PROMOTION_SCREEN.classList.remove("promotion-screen-visible");
+            });
+        });
+    });
+
+    return selectionPromise.then(val => val);
+}
+
+async function checkLegality(data) {
     const { ID, color, pieceMoveCount, startSquare, destinationSquare } = data;
 
     let isMoveLegal = true;
@@ -93,6 +130,7 @@ function checkLegality(data) {
     const rankB = +posB[1];
 
     let isCapturing = false;
+    let isPromoting = false;
 
     if (destinationSquare.innerHTML !== "") {
         const capturedPiece = destinationSquare.children[0];
@@ -113,6 +151,8 @@ function checkLegality(data) {
     switch (ID) {
         case "p":
             // todo: en passant
+            // todo: promotion
+
             dd = Math.abs(rankA - rankB);
 
             if (!isCapturing && fileA !== fileB) { console.error("cant change files when not capturing"); return false };
@@ -123,6 +163,33 @@ function checkLegality(data) {
             if (color === "black" && rankA < rankB) { console.error("cant increase rank as black"); return false };
             if (dd > 2) { console.error("cant move for more than 2 squares"); return false; }
             if (pieceMoveCount > 0 && dd > 1) { console.error("cant move more than 1 square after first move"); return false; }
+
+            if (color === "white" && rankB === 8) {
+                isPromoting = true;
+
+            } else if (color === "black" && rankB === 1) {
+                isPromoting = true;
+            }
+
+            if (isPromoting) {
+                // because the piece somehow keeps dragging when the modal pops up
+                resetDraggedPieceStyles(document.querySelector(".dragged"));
+
+                const selection = await getPromotionSelection(color);
+
+                const IMAGE_ELEMENT = document.createElement("img");
+                IMAGE_ELEMENT.src = `./assets/${color === "white" ? selection.toUpperCase() : selection}.png`;
+
+                IMAGE_ELEMENT.dataset.color = color;
+                IMAGE_ELEMENT.dataset.pieceid = selection;
+                IMAGE_ELEMENT.dataset.move_count = 0;
+
+                IMAGE_ELEMENT.className = "piece";
+                IMAGE_ELEMENT.draggable = false;
+
+                destinationSquare.replaceChildren(IMAGE_ELEMENT);
+                startSquare.innerHTML = "";
+            }
 
             break
         case "n":
@@ -137,7 +204,7 @@ function checkLegality(data) {
             break
     }
 
-    return { isMoveLegal, isCapturing };
+    return { isMoveLegal, isCapturing, isPromoting };
 }
 
 let draggedPiece;
@@ -165,8 +232,10 @@ document.addEventListener("mousedown", (e) => {
     }
 
     function moveAt(pageX, pageY) {
-        draggedPiece.style.left = `${pageX - offsetX}px`;
-        draggedPiece.style.top = `${pageY - offsetY}px`;
+        if (draggedPiece) {
+            draggedPiece.style.left = `${pageX - offsetX}px`;
+            draggedPiece.style.top = `${pageY - offsetY}px`;
+        }
     }
 
     document.addEventListener("mousemove", onMouseMove);
@@ -175,13 +244,7 @@ document.addEventListener("mousedown", (e) => {
         moveAt(e.pageX, e.pageY);
     }
 
-    function resetDraggedPieceStyles(draggedPiece) {
-        draggedPiece.classList.remove("dragged");
-        draggedPiece.style.left = "";
-        draggedPiece.style.top = "";
-    }
-
-    document.addEventListener("mouseup", function onMouseUp(e) {
+    document.addEventListener("mouseup", async function onMouseUp(e) {
         if (draggedPiece) {
             let target = document.elementFromPoint(e.clientX, e.clientY);
             target = target.classList.contains("piece") ? target.parentElement : target;
@@ -204,7 +267,7 @@ document.addEventListener("mousedown", (e) => {
 
             let pieceid = draggedPiece.dataset.pieceid.toUpperCase();
 
-            const { isMoveLegal, isCapturing } = checkLegality({
+            const { isMoveLegal, isCapturing, isPromoting } = await checkLegality({
                 ID: pieceid.toLowerCase(),
                 color: pieceColor,
                 pieceMoveCount: draggedPiece.dataset.move_count,
@@ -221,8 +284,11 @@ document.addEventListener("mousedown", (e) => {
                 draggedPiece.dataset.move_count = +draggedPiece.dataset.move_count + 1;
 
                 ++moveIdx;
-                target.innerHTML = "";
-                target.appendChild(draggedPiece);
+
+                if (!isPromoting) {
+                    target.innerHTML = "";
+                    target.appendChild(draggedPiece);
+                }
 
                 if (isCapturing) {
                     captureSound.play();

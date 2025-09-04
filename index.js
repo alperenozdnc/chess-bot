@@ -86,13 +86,11 @@ function checkLegality(data) {
     const posA = startSquare.dataset.pos;
     const posB = destinationSquare.dataset.pos;
 
-    console.log(posA, posB);
+    const fileA = FILES.indexOf(posA[0]);
+    const fileB = FILES.indexOf(posB[0]);
 
-    const fileA = posA[0];
-    const rankA = posA[1];
-
-    const fileB = posB[0];
-    const rankB = posB[1];
+    const rankA = +posA[1];
+    const rankB = +posB[1];
 
     let isCapturing = false;
 
@@ -115,13 +113,16 @@ function checkLegality(data) {
     switch (ID) {
         case "p":
             // todo: en passant
-            // can only change ONE file when capturing
-            dd = Math.abs(+rankA - +rankB);
+            dd = Math.abs(rankA - rankB);
+
+            console.log(Math.abs(fileA - fileB));
 
             if (!isCapturing && fileA !== fileB) { console.error("cant change files when not capturing"); return false };
             if (isCapturing && fileA === fileB) { console.error("cant stay on the same file while capturing"); return false };
-            if (color === "white" && +rankA > +rankB) { console.error("cant decrease rank as white"); return false };
-            if (color === "black" && +rankA < +rankB) { console.error("cant increase rank as black"); return false };
+            if (isCapturing && rankA === rankB) { console.error("cant stay on the same rank while capturing"); return false };
+            if (isCapturing && Math.abs(fileA - fileB) > 1) { console.error("can only capture to the left or right"); return false; }
+            if (color === "white" && rankA > rankB) { console.error("cant decrease rank as white"); return false };
+            if (color === "black" && rankA < rankB) { console.error("cant increase rank as black"); return false };
             if (dd > 2) { console.error("cant move for more than 2 squares"); return false; }
             if (pieceMoveCount > 0 && dd > 1) { console.error("cant move more than 1 square after first move"); return false; }
 
@@ -207,8 +208,6 @@ document.addEventListener("mousedown", (e) => {
                 startSquare: originalSquare,
                 destinationSquare: target
             });
-
-            console.log({ isMoveLegal, isCapturing });
 
             if (target.classList.contains("square") && pieceCanMove && target !== originalSquare && isMoveLegal) {
                 let pos = target.dataset.pos;

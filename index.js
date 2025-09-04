@@ -187,6 +187,11 @@ document.addEventListener("mousedown", (e) => {
             target = target.classList.contains("piece") ? target.parentElement : target;
 
             if (!target) return;
+            if (!target.classList.contains("square")) {
+                originalSquare.appendChild(draggedPiece);
+                resetDraggedPieceStyles(draggedPiece);
+                return;
+            }
 
             let pieceCanMove = false;
             const pieceColor = draggedPiece.dataset.color;
@@ -233,6 +238,7 @@ document.addEventListener("mousedown", (e) => {
 
         document.removeEventListener("mousemove", onMouseMove);
         document.removeEventListener("mouseup", onMouseUp);
+        draggedPiece = null;
     });
 });
 

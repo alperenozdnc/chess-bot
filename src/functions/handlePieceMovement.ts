@@ -3,6 +3,10 @@ import { Piece, PieceColor } from "@types";
 import { resetDraggedPieceStyles } from "@utils";
 import { checkLegality } from "@functions";
 
+function undoMove(originalSquare: HTMLDivElement, piece: HTMLImageElement) {
+    originalSquare.appendChild(piece);
+}
+
 export function handlePieceMovement() {
     let draggedPiece: HTMLImageElement | null;
     let originalSquare: HTMLDivElement;
@@ -62,6 +66,12 @@ export function handlePieceMovement() {
                     if (moveIdx % 2 !== 0) pieceCanMove = true;
                 }
 
+                if (!pieceCanMove) {
+                    undoMove(originalSquare, draggedPiece);
+                    resetDraggedPieceStyles(draggedPiece);
+                    return;
+                }
+
                 let pieceid = draggedPiece.dataset.pieceid!.toUpperCase();
 
                 const { isMoveLegal, isCapturing, isPromoting } = await checkLegality({
@@ -93,7 +103,7 @@ export function handlePieceMovement() {
                         MOVE_SOUND.play();
                     }
                 } else {
-                    originalSquare.appendChild(draggedPiece);
+                    undoMove(originalSquare, draggedPiece);
                 }
 
                 resetDraggedPieceStyles(draggedPiece);

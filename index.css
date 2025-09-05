@@ -6,21 +6,36 @@
     box-sizing: border-box;
 }
 
-#board {
-    width: 100vw;
-    height: 100vh;
+body {
+    background: rgba(0, 0, 0, 0.9);
+}
 
+#content-wrapper {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+}
+
+#sidebar {
+    background: rgba(255, 255, 255, 0.1);
+    min-width: 30vw;
+    min-height: 100vh;
+    max-height: 100vh;
+}
+
+#board {
     display: flex;
     align-items: center;
     flex-direction: column;
     justify-content: center;
+    min-height: 100vh;
 }
 
 #board-wrapper {
     display: flex;
     align-items: center;
     flex-direction: column;
-    justify-content: center;
+    justify-content: flex;
     user-select: none;
 }
 
@@ -33,8 +48,8 @@
 }
 
 .square {
-    width: 100px;
-    height: 100px;
+    width: calc(100vh / 8);
+    height: calc(100vh / 8);
 
     display: flex;
     align-items: center;
@@ -46,12 +61,12 @@
 }
 
 .black {
-    background: rgb(100, 100, 100);
+    background: rgb(30, 120, 150);
 }
 
 img {
-    width: 90px;
-    height: 90px;
+    width: 100px;
+    width: 100px;
 }
 
 img:hover {
@@ -64,6 +79,22 @@ img:hover {
     cursor: pointer;
     pointer-events: none;
     opacity: 1;
+}
+
+#flip-button {
+    background: red;
+    width: 100%;
+    padding-block: 1rem;
+    font-family: monospace;
+    background: rgba(0, 0, 0, 0.1);
+    color: white;
+    outline: none;
+    border: none;
+}
+
+#flip-button:hover {
+    cursor: pointer;
+    background: rgba(0, 0, 0, 0.2);
 }
 
 #promotion-screen {

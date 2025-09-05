@@ -3,15 +3,15 @@ import { Piece, PieceColor } from "@types";
 import { resetDraggedPieceStyles } from "@utils";
 import { checkLegality } from "@functions";
 
-let draggedPiece: HTMLImageElement | null;
-let originalSquare: HTMLDivElement;
-
-let offsetX = 0;
-let offsetY = 0;
-
-let moveIdx = 0;
-
 export function handlePieceMovement() {
+    let draggedPiece: HTMLImageElement | null;
+    let originalSquare: HTMLDivElement;
+
+    let offsetX = 0;
+    let offsetY = 0;
+
+    let moveIdx = 0;
+
     document.addEventListener("mousedown", (e) => {
         if ((e.target as HTMLElement).classList.contains("piece")) {
             draggedPiece = e.target as HTMLImageElement;

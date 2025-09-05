@@ -1,0 +1,108 @@
+import { CAPTURE_SOUND, MOVE_SOUND } from "@constants";
+import { Piece, PieceColor } from "@types";
+import { resetDraggedPieceStyles } from "@utils";
+import { checkLegality } from "@functions";
+
+let draggedPiece: HTMLImageElement | null;
+let originalSquare: HTMLDivElement;
+
+let offsetX = 0;
+let offsetY = 0;
+
+let moveIdx = 0;
+
+export function handlePieceMovement() {
+    document.addEventListener("mousedown", (e) => {
+        if ((e.target as HTMLElement).classList.contains("piece")) {
+            draggedPiece = e.target as HTMLImageElement;
+            originalSquare = draggedPiece.parentElement as HTMLDivElement;
+
+            const rect = draggedPiece.getBoundingClientRect();
+
+            offsetX = e.clientX - rect.left;
+            offsetY = e.clientY - rect.top;
+
+            draggedPiece.classList.add("dragged");
+
+            document.body.appendChild(draggedPiece);
+            moveAt(e.pageX, e.pageY);
+        }
+
+        function moveAt(pageX: number, pageY: number) {
+            if (draggedPiece) {
+                draggedPiece.style.left = `${pageX - offsetX}px`;
+                draggedPiece.style.top = `${pageY - offsetY}px`;
+            }
+        }
+
+        document.addEventListener("mousemove", onMouseMove);
+
+        function onMouseMove(e: MouseEvent) {
+            moveAt(e.pageX, e.pageY);
+        }
+
+        document.addEventListener("mouseup", async function onMouseUp(e) {
+            if (draggedPiece) {
+                let target = document.elementFromPoint(e.clientX, e.clientY)!;
+                target = (target.classList.contains("piece") ? target.parentElement : target)!;
+
+                if (!target) return;
+                if (!target.classList.contains("square")) {
+                    originalSquare.appendChild(draggedPiece);
+                    resetDraggedPieceStyles(draggedPiece);
+                    return;
+                }
+
+                let pieceCanMove = false;
+                const pieceColor = draggedPiece.dataset.color as PieceColor;
+
+                if (pieceColor === "white") {
+                    if (moveIdx % 2 === 0) pieceCanMove = true;
+                } else {
+                    if (moveIdx % 2 !== 0) pieceCanMove = true;
+                }
+
+                let pieceid = draggedPiece.dataset.pieceid!.toUpperCase();
+
+                const { isMoveLegal, isCapturing, isPromoting } = await checkLegality({
+                    ID: (pieceid.toLowerCase() as Piece),
+                    color: pieceColor,
+                    pieceMoveCount: Number(draggedPiece.dataset.move_count),
+                    startSquare: originalSquare,
+                    destinationSquare: target as HTMLDivElement
+                });
+
+                if (target.classList.contains("square") && pieceCanMove && target !== originalSquare && isMoveLegal) {
+                    let pos = (target as HTMLDivElement).dataset.pos;
+
+                    let notation = pos;
+                    if (pieceid !== "P") notation = `${pieceid}${notation}`;
+
+                    (draggedPiece.dataset.move_count as unknown as number) = +(draggedPiece.dataset.move_count ?? 0) + 1;
+
+                    ++moveIdx;
+
+                    if (!isPromoting) {
+                        target.innerHTML = "";
+                        target.appendChild(draggedPiece);
+                    }
+
+                    if (isCapturing) {
+                        CAPTURE_SOUND.play();
+                    } else {
+                        MOVE_SOUND.play();
+                    }
+                } else {
+                    originalSquare.appendChild(draggedPiece);
+                }
+
+                resetDraggedPieceStyles(draggedPiece);
+            }
+
+            document.removeEventListener("mousemove", onMouseMove);
+            document.removeEventListener("mouseup", onMouseUp);
+
+            draggedPiece = null;
+        });
+    });
+}

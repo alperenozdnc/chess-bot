@@ -1,11 +1,27 @@
 {
   "compilerOptions": {
-    "target": "ES2017",
-    "lib": ["ES2017", "DOM"],
+    "target": "esnext",
+    "module": "esnext",
+    "moduleResolution": "node",
     "strict": true,
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "lib": ["esnext", "dom"],
+    "baseUrl": "./src",
+    "paths": {
+      "@constants": ["./constants/index.ts"],
+      "@enums": ["./enums/index.ts"],
+      "@types": ["./types/index.ts"],
+      "@interfaces": ["./interfaces/index.ts"],
+      "@functions": ["./functions/index.ts"],
+      "@utils": ["./utils/index.ts"],
+      "@constants/*": ["./constants/*"],
+      "@enums/*": ["./enums/*"],
+      "@types/*": ["./types/*"],
+      "@interfaces/*": ["./interfaces/*"],
+      "@functions/*": ["./functions/*"],
+      "@utils/*": ["./utils/*"]
+    }
   },
-  "include": ["./**/*.ts"],
-  "exclude": ["node_modules"]
+  "include": ["src"]
 }
+

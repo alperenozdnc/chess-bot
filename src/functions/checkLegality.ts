@@ -59,7 +59,7 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
                 isPromoting = true;
             }
 
-            if (isPromoting) {
+            if (isMoveLegal && isPromoting) {
                 // because the piece somehow keeps dragging when the modal pops up
                 resetDraggedPieceStyles(document.querySelector(".dragged")!);
 

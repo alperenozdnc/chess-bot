@@ -1,9 +1,7 @@
-import { FILES } from "@constants";
+import { FILES, BOARD } from "@constants";
 import { Piece } from "@types";
 
 export function drawBoardfromFEN(FEN: string, isBoardFlipped = false) {
-    const BOARD = document.getElementById("board-wrapper") as HTMLDivElement;
-
     BOARD.innerHTML = "";
 
     let squareColor = 0;

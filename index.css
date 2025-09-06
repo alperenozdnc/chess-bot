@@ -67,6 +67,7 @@ body {
 img {
     width: 100px;
     width: 100px;
+    z-index: 2;
 }
 
 img:hover {
@@ -136,4 +137,28 @@ img:hover {
 
 .promotion-piece {
     user-select: none;
+}
+
+.capturable-highlight::before {
+    content: "";
+
+    background: none;
+    border: 8px solid rgba(0, 0, 0, 0.3);
+
+    width: calc(100vh / 8);
+    height: calc(100vh / 8);
+
+    border-radius: 50%;
+    position: absolute;
+    z-index: 1;
+}
+
+.highlight::before {
+    content: "";
+    background: rgba(0, 0, 0, 0.3);
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    position: absolute;
+    z-index: 1;
 }

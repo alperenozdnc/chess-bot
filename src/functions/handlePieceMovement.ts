@@ -1,22 +1,33 @@
 import { CAPTURE_SOUND, MOVE_SOUND } from "@constants";
 import { Piece, PieceColor } from "@types";
 import { resetDraggedPieceStyles } from "@utils";
-import { checkLegality } from "@functions";
+import { checkLegality, listLegalMoves } from "@functions";
 
 function undoMove(originalSquare: HTMLDivElement, piece: HTMLImageElement) {
     originalSquare.appendChild(piece);
 }
 
+function checkTurn(moveIdx: number, color: PieceColor) {
+    if (color === "white") {
+        if (moveIdx % 2 === 0) return true;
+    } else {
+        if (moveIdx % 2 !== 0) return true;
+    }
+
+    return false;
+}
+
 export function handlePieceMovement() {
     let draggedPiece: HTMLImageElement | null;
     let originalSquare: HTMLDivElement;
+    let highlightedSquares: HTMLDivElement[] = [];
 
     let offsetX = 0;
     let offsetY = 0;
 
     let moveIdx = 0;
 
-    document.addEventListener("mousedown", (e) => {
+    document.addEventListener("mousedown", async (e) => {
         if ((e.target as HTMLElement).classList.contains("piece")) {
             draggedPiece = e.target as HTMLImageElement;
             originalSquare = draggedPiece.parentElement as HTMLDivElement;
@@ -30,6 +41,30 @@ export function handlePieceMovement() {
 
             document.body.appendChild(draggedPiece);
             moveAt(e.pageX, e.pageY);
+
+            const pieceColor = draggedPiece.dataset.color as PieceColor;
+            let pieceCanMove = checkTurn(moveIdx, pieceColor);
+
+            if (pieceCanMove) {
+                const legalMoves = await listLegalMoves(
+                    {
+                        piece: draggedPiece.dataset.pieceid! as Piece,
+                        startSquare: originalSquare,
+                        color: draggedPiece.dataset.color! as unknown as PieceColor,
+                        pieceMoveCount: +draggedPiece.dataset.move_count! as unknown as number
+                    }
+                );
+
+                for (const legalMove of legalMoves) {
+                    highlightedSquares.push(legalMove.square);
+
+                    if (legalMove.isCapturing) {
+                        legalMove.square.classList.add("capturable-highlight");
+                    } else {
+                        legalMove.square.classList.add("highlight");
+                    }
+                }
+            }
         }
 
         function moveAt(pageX: number, pageY: number) {
@@ -47,23 +82,24 @@ export function handlePieceMovement() {
 
         document.addEventListener("mouseup", async function onMouseUp(e) {
             if (draggedPiece) {
+                const pieceColor = draggedPiece.dataset.color as PieceColor;
+                let pieceCanMove = checkTurn(moveIdx, pieceColor);
                 let target = document.elementFromPoint(e.clientX, e.clientY)!;
                 target = (target.classList.contains("piece") ? target.parentElement : target)!;
+
+                if (highlightedSquares.length > 0) {
+                    for (const square of highlightedSquares) {
+                        square.classList.remove("highlight", "capturable-highlight");
+                    }
+
+                    highlightedSquares = []
+                }
 
                 if (!target) return;
                 if (!target.classList.contains("square")) {
                     originalSquare.appendChild(draggedPiece);
                     resetDraggedPieceStyles(draggedPiece);
                     return;
-                }
-
-                let pieceCanMove = false;
-                const pieceColor = draggedPiece.dataset.color as PieceColor;
-
-                if (pieceColor === "white") {
-                    if (moveIdx % 2 === 0) pieceCanMove = true;
-                } else {
-                    if (moveIdx % 2 !== 0) pieceCanMove = true;
                 }
 
                 if (!pieceCanMove) {
@@ -102,6 +138,7 @@ export function handlePieceMovement() {
                     } else {
                         MOVE_SOUND.play();
                     }
+
                 } else {
                     undoMove(originalSquare, draggedPiece);
                 }

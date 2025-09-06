@@ -81,6 +81,16 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
 
             break
         case Pieces.Knight:
+            const df = Math.abs(fileA - fileB);
+            const dr = Math.abs(rankA - rankB);
+
+            if (df < 1) { console.error("cant change less than one file"); isMoveLegal = false; }
+            if (df > 2) { console.error("cant change more than two files"); isMoveLegal = false; }
+            if (dr > 2) { console.error("cant change more than two ranks"); isMoveLegal = false; }
+            if (dr < 1) { console.error("cant change less than one rank"); isMoveLegal = false; }
+            if (df === 1 && dr !== 2) { console.error("cant not move 2 files when moving vertically"); isMoveLegal = false; }
+            if (dr === 2 && df !== 1) { console.error("cant not move 1 file when moving sideways"); isMoveLegal = false; }
+
             break
         case Pieces.Bishop:
             break

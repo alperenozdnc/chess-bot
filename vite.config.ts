@@ -15,6 +15,7 @@ export default defineConfig({
             "@interfaces": resolve(__dirname, "src/interfaces"),
             "@functions": resolve(__dirname, "src/functions"),
             "@utils": resolve(__dirname, "src/utils"),
+            "@maps": resolve(__dirname, "src/maps"),
         }
     },
     server: {

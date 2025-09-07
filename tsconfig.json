@@ -14,12 +14,14 @@
       "@interfaces": ["./interfaces/index.ts"],
       "@functions": ["./functions/index.ts"],
       "@utils": ["./utils/index.ts"],
+      "@maps": ["./maps/index.ts"],
       "@constants/*": ["./constants/*"],
       "@enums/*": ["./enums/*"],
       "@types/*": ["./types/*"],
       "@interfaces/*": ["./interfaces/*"],
       "@functions/*": ["./functions/*"],
-      "@utils/*": ["./utils/*"]
+      "@utils/*": ["./utils/*"],
+      "@maps/*": ["./utils/*"]
     }
   },
   "include": ["src"]

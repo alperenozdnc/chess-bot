@@ -38,19 +38,21 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
         isCapturing = true;
     }
 
+    const df = Math.abs(fileA - fileB);
+    const dr = Math.abs(rankA - rankB);
+
     switch (ID) {
         case Pieces.Pawn:
             // todo: en passant
-            const dd: number = Math.abs(rankA - rankB);
-
             if (!isCapturing && fileA !== fileB) { console.error("cant change files when not capturing"); isMoveLegal = false };
             if (isCapturing && fileA === fileB) { console.error("cant stay on the same file while capturing"); isMoveLegal = false };
             if (isCapturing && rankA === rankB) { console.error("cant stay on the same rank while capturing"); isMoveLegal = false };
+            if (isCapturing && dr > 1) { console.error("cant change more than one rank while capturing"); isMoveLegal = false };
             if (isCapturing && Math.abs(fileA - fileB) > 1) { console.error("can only capture to the left or right"); isMoveLegal = false; }
             if (color === "white" && rankA > rankB) { console.error("cant decrease rank as white"); isMoveLegal = false };
             if (color === "black" && rankA < rankB) { console.error("cant increase rank as black"); isMoveLegal = false };
-            if (dd > 2) { console.error("cant move for more than 2 squares"); isMoveLegal = false; }
-            if (pieceMoveCount > 0 && dd > 1) { console.error("cant move more than 1 square after first move"); isMoveLegal = false; }
+            if (dr > 2) { console.error("cant move for more than 2 squares"); isMoveLegal = false; }
+            if (pieceMoveCount > 0 && dr > 1) { console.error("cant move more than 1 square after first move"); isMoveLegal = false; }
 
             if (color === "white" && rankB === 8) {
                 isPromoting = true;
@@ -81,9 +83,6 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
 
             break
         case Pieces.Knight:
-            const df = Math.abs(fileA - fileB);
-            const dr = Math.abs(rankA - rankB);
-
             if (df < 1) { console.error("cant change less than one file"); isMoveLegal = false; }
             if (df > 2) { console.error("cant change more than two files"); isMoveLegal = false; }
             if (dr > 2) { console.error("cant change more than two ranks"); isMoveLegal = false; }
@@ -93,6 +92,25 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
 
             break
         case Pieces.Bishop:
+            if (df === 0) {
+                console.error("cant not change file");
+                isMoveLegal = false;
+            }
+
+            if (dr === 0) {
+                console.error("cant not change rank");
+                isMoveLegal = false;
+            }
+
+            if (df !== dr) {
+                console.error("cant not move diagonally");
+                isMoveLegal = false;
+            }
+
+            for (let diagonalRank = 0; diagonalRank <= fileA; diagonalRank++) {
+                console.log(`${FILES[7 - diagonalRank]}${diagonalRank + 1}`);
+            }
+
             break
         case Pieces.Rook:
             break

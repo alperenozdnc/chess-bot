@@ -4,6 +4,32 @@ import { FILES } from "../constants";
 import { Pieces } from "../enums";
 import { MoveData, MoveLegality } from "../interfaces";
 import { resetDraggedPieceStyles } from "../utils";
+import { PieceColor } from "@types";
+
+function checkForObstacles(directions: string[][], pos: string, color: PieceColor): boolean {
+    const allAvailableMoves: string[] = [];
+
+    for (const direction of directions) {
+        for (const pos of direction) {
+            const square = document.querySelector(`[data-pos=${pos}]`)!;
+
+            if (square.hasChildNodes()) {
+                if ((square.querySelector("img") as HTMLImageElement).dataset.color !== color) {
+                    allAvailableMoves.push(pos);
+                    break;
+                } else {
+                    break;
+                }
+            } else {
+                allAvailableMoves.push(pos);
+            }
+        }
+    }
+
+    if (!allAvailableMoves.includes(pos)) { console.error("cant jump over pieces"); return false; }
+
+    return true;
+}
 
 export async function checkLegality(data: MoveData): Promise<MoveLegality> {
     const { ID, color, pieceMoveCount, startSquare, destinationSquare } = data;
@@ -107,16 +133,107 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
                 isMoveLegal = false;
             }
 
-            for (let diagonalRank = 0; diagonalRank <= fileA; diagonalRank++) {
-                console.log(`${FILES[7 - diagonalRank]}${diagonalRank + 1}`);
+            let topLeftDir: string[] = [];
+            let bottomLeftDir: string[] = [];
+            let topRightDir: string[] = [];
+            let bottomRightDir: string[] = [];
+
+            let r = rankA + 1;
+            let r2 = rankA - 1;
+
+            let r3 = rankA + 1;
+            let r4 = rankA - 1;
+
+            for (let f = fileA - 1; f >= 0; f--) {
+                const fileString = FILES[f];
+
+                // file decrease, rank increase (move top left diagonally)
+                if (r <= 8) {
+                    topLeftDir.push(`${fileString}${r}`);
+                }
+
+                // file decrease, rank decrease (move bottom left diagonally) 
+                if (r2 >= 1) {
+                    bottomLeftDir.push(`${fileString}${r2}`);
+                }
+
+                r++;
+                r2--;
             }
+
+
+            for (let f = fileA + 1; f < 8; f++) {
+                const fileString = FILES[f];
+
+                // file increase, rank increase (move top right diagonally)
+                if (r3 <= 8) {
+                    topRightDir.push(`${fileString}${r3}`);
+                }
+
+                // file increase, rank decrease (move bottom right diagonally) 
+                if (r4 >= 1) {
+                    bottomRightDir.push(`${fileString}${r4}`);
+                }
+
+                r3++;
+                r4--;
+            }
+
+            isMoveLegal = checkForObstacles([topLeftDir, topRightDir, bottomLeftDir, bottomRightDir], posB, color);
 
             break
         case Pieces.Rook:
+            if (df >= 1 && dr !== 0) { console.error("cant move up while moving sideways"); isMoveLegal = false; }
+
+            let up = [];
+            let left = [];
+            let right = [];
+            let down = [];
+
+            for (let f = 0; f <= 7; f++) {
+                const fileString = FILES[f];
+
+                if (f === fileA) {
+                    continue;
+                }
+
+                if (f < fileA) {
+                    left.push(`${fileString}${rankA}`);
+                } else {
+                    right.push(`${fileString}${rankA}`);
+                }
+            }
+
+            for (let r = 1; r <= 8; r++) {
+                const fileString = FILES[fileA];
+
+                if (r === rankA) {
+                    continue;
+                }
+
+                if (r < rankA) {
+                    down.push(`${fileString}${r}`);
+                } else {
+                    up.push(`${fileString}${r}`);
+                }
+            }
+
+            left = left.reverse();
+            down = down.reverse();
+
+            isMoveLegal = checkForObstacles([up, down, left, right], posB, color);
+
             break
         case Pieces.Queen:
+            const { isMoveLegal: actsAsABishop } = await checkLegality({ ID: Pieces.Bishop, color, pieceMoveCount, startSquare, destinationSquare });
+            const { isMoveLegal: actsAsARook } = await checkLegality({ ID: Pieces.Rook, color, pieceMoveCount, startSquare, destinationSquare });
+
+            if (!actsAsABishop && !actsAsARook) isMoveLegal = false;
+
             break
         case Pieces.King:
+            if (df > 1 || dr > 1) { console.error("cant move more than a square"); isMoveLegal = false; }
+
             break
     }
 

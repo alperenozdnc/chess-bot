@@ -1,12 +1,12 @@
 import { getPromotionSelection } from "@functions";
-
-import { FILES } from "../constants";
-import { Pieces } from "../enums";
-import { MoveData, MoveLegality } from "../interfaces";
-import { resetDraggedPieceStyles } from "../utils";
+import { FILES } from "@constants";
+import { Pieces } from "@enums";
+import { MoveData, MoveLegality } from "@interfaces";
+import { resetDraggedPieceStyles } from "@utils";
 import { PieceColor } from "@types";
+import { CastlingMap } from "@maps";
 
-function checkForObstacles(directions: string[][], pos: string, color: PieceColor): boolean {
+function checkForObstacles(directions: string[][], pos: string, color: PieceColor, castleChecking = false): boolean | string[] {
     const allAvailableMoves: string[] = [];
 
     for (const direction of directions) {
@@ -25,6 +25,8 @@ function checkForObstacles(directions: string[][], pos: string, color: PieceColo
             }
         }
     }
+
+    if (castleChecking) return allAvailableMoves;
 
     if (!allAvailableMoves.includes(pos)) { console.error("cant jump over pieces"); return false; }
 
@@ -47,6 +49,7 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
 
     let isCapturing = false;
     let isPromoting = false;
+    let isCastling = false;
 
     if (destinationSquare.innerHTML !== "") {
         const capturedPiece = (destinationSquare.children[0] as HTMLImageElement);
@@ -179,7 +182,7 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
                 r4--;
             }
 
-            isMoveLegal = checkForObstacles([topLeftDir, topRightDir, bottomLeftDir, bottomRightDir], posB, color);
+            isMoveLegal = checkForObstacles([topLeftDir, topRightDir, bottomLeftDir, bottomRightDir], posB, color) as boolean;
 
             break
         case Pieces.Rook:
@@ -221,7 +224,7 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
             left = left.reverse();
             down = down.reverse();
 
-            isMoveLegal = checkForObstacles([up, down, left, right], posB, color);
+            isMoveLegal = checkForObstacles([up, down, left, right], posB, color) as boolean;
 
             break
         case Pieces.Queen:
@@ -232,11 +235,50 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
 
             break
         case Pieces.King:
-            if (df > 1 || dr > 1) { console.error("cant move more than a square"); isMoveLegal = false; }
+            // the squares that have to be empty corresponding to the castle activation square
+            function checkCastlingRights(pos: string, castlingPieces: string[]): boolean {
+                const emptySquares = checkForObstacles([castlingPieces], pos, color, true) as string[];
+                const rookPos = castlingPieces[castlingPieces.length - 1];
 
-            break
+                // .length - 1 is accounting for the rook here
+                if (emptySquares.length === castlingPieces.length - 1) {
+                    const rookSquare = document.querySelector(`[data-pos=${rookPos}]`)!;
+                    const piece = rookSquare.querySelector("img");
+
+                    if (piece && piece.dataset.pieceid === Pieces.Rook) {
+                        if (piece.dataset.move_count === "0") {
+                            return true;
+                        }
+                    }
+                }
+
+                return false;
+            }
+
+            if (pieceMoveCount === 0) {
+                for (let sqr of CastlingMap.keys()) {
+                    let dir = CastlingMap.get(sqr);
+
+                    if (sqr === posB) {
+                        isCastling = checkCastlingRights(sqr, dir as string[]);
+
+                        break;
+                    }
+                }
+            }
+
+            if (isCastling) {
+                isMoveLegal = true;
+
+                if (df == 2 && dr > 2) { console.error("cant move more than two files and one rank while castling"); isMoveLegal = false; }
+            } else {
+                if (df > 1 || dr > 1) { console.error("cant move more than a square"); isMoveLegal = false; }
+            }
+
+            break;
     }
 
-    return { isMoveLegal, isCapturing, isPromoting };
+
+    return { isMoveLegal, isCapturing, isPromoting, isCastling };
 }
 

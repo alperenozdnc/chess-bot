@@ -2,6 +2,7 @@ import { CAPTURE_SOUND, MOVE_SOUND } from "@constants";
 import { Piece, PieceColor } from "@types";
 import { resetDraggedPieceStyles } from "@utils";
 import { checkLegality, listLegalMoves } from "@functions";
+import { CastlingMap } from "@maps";
 
 function undoMove(originalSquare: HTMLDivElement, piece: HTMLImageElement) {
     originalSquare.appendChild(piece);
@@ -110,7 +111,7 @@ export function handlePieceMovement() {
 
                 let pieceid = draggedPiece.dataset.pieceid!.toUpperCase();
 
-                const { isMoveLegal, isCapturing, isPromoting } = await checkLegality({
+                const { isMoveLegal, isCapturing, isPromoting, isCastling } = await checkLegality({
                     ID: (pieceid.toLowerCase() as Piece),
                     color: pieceColor,
                     pieceMoveCount: Number(draggedPiece.dataset.move_count),
@@ -137,6 +138,21 @@ export function handlePieceMovement() {
                         CAPTURE_SOUND.play();
                     } else {
                         MOVE_SOUND.play();
+                    }
+
+                    if (isCastling) {
+                        const castlingSquares = CastlingMap.get(pos!)!;
+                        const posA = castlingSquares[castlingSquares.length - 1];
+                        const posB = castlingSquares[0];
+
+                        const firstPos = document.querySelector(`[data-pos="${posA}"]`)!;
+                        const secondPos = document.querySelector(`[data-pos="${posB}"]`)!;
+
+                        const rook = firstPos.querySelector("img")!;
+                        (rook.dataset.move_count as unknown as number) = +(rook.dataset.move_count ?? 0) + 1;
+
+                        firstPos.innerHTML = "";
+                        secondPos.appendChild(rook);
                     }
 
                 } else {

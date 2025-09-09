@@ -7,9 +7,10 @@ interface Data {
     color: PieceColor;
     pieceMoveCount: number;
     startSquare: HTMLDivElement;
+    moveIdx: number;
 }
 
-export async function listLegalMoves({ piece, color, startSquare, pieceMoveCount }: Data): Promise<LegalMoveData[]> {
+export async function listLegalMoves({ piece, color, startSquare, pieceMoveCount, moveIdx }: Data): Promise<LegalMoveData[]> {
     let squares: HTMLDivElement[] = [];
     document.querySelectorAll(".square").forEach(square => squares.push(square as HTMLDivElement));
 
@@ -18,7 +19,7 @@ export async function listLegalMoves({ piece, color, startSquare, pieceMoveCount
     for (const square of squares) {
         if (square === startSquare) continue;
 
-        const { isMoveLegal, isCapturing } = await checkLegality({ ID: piece, color: color, pieceMoveCount: pieceMoveCount, startSquare, destinationSquare: square });
+        const { isMoveLegal, isCapturing } = await checkLegality({ ID: piece, color: color, pieceMoveCount: pieceMoveCount, startSquare, destinationSquare: square, moveIdx: moveIdx, isJustChecking: true });
 
         if (isMoveLegal) { legalMoves.push({ square, isCapturing }) }
     }

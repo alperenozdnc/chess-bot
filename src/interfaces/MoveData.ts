@@ -6,4 +6,6 @@ export interface MoveData {
     pieceMoveCount: number;
     startSquare: HTMLDivElement;
     destinationSquare: HTMLDivElement;
+    moveIdx: number;
+    isJustChecking: boolean;
 }

@@ -52,7 +52,8 @@ export function handlePieceMovement() {
                         piece: draggedPiece.dataset.pieceid! as Piece,
                         startSquare: originalSquare,
                         color: draggedPiece.dataset.color! as unknown as PieceColor,
-                        pieceMoveCount: +draggedPiece.dataset.move_count! as unknown as number
+                        pieceMoveCount: +draggedPiece.dataset.move_count! as unknown as number,
+                        moveIdx: moveIdx
                     }
                 );
 
@@ -111,12 +112,14 @@ export function handlePieceMovement() {
 
                 let pieceid = draggedPiece.dataset.pieceid!.toUpperCase();
 
-                const { isMoveLegal, isCapturing, isPromoting, isCastling } = await checkLegality({
+                const { isMoveLegal, isCapturing, isPromoting, isCastling, isEnPassant, enPassantablePawn } = await checkLegality({
                     ID: (pieceid.toLowerCase() as Piece),
                     color: pieceColor,
                     pieceMoveCount: Number(draggedPiece.dataset.move_count),
                     startSquare: originalSquare,
-                    destinationSquare: target as HTMLDivElement
+                    destinationSquare: target as HTMLDivElement,
+                    moveIdx: moveIdx,
+                    isJustChecking: false
                 });
 
                 if (target.classList.contains("square") && pieceCanMove && target !== originalSquare && isMoveLegal) {
@@ -155,6 +158,9 @@ export function handlePieceMovement() {
                         secondPos.appendChild(rook);
                     }
 
+                    if (isEnPassant && enPassantablePawn) {
+                        enPassantablePawn.remove();
+                    }
                 } else {
                     undoMove(originalSquare, draggedPiece);
                 }

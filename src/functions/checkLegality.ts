@@ -34,7 +34,7 @@ function checkForObstacles(directions: string[][], pos: string, color: PieceColo
 }
 
 export async function checkLegality(data: MoveData): Promise<MoveLegality> {
-    const { ID, color, pieceMoveCount, startSquare, destinationSquare } = data;
+    const { ID, color, pieceMoveCount, startSquare, destinationSquare, moveIdx, isJustChecking } = data;
 
     let isMoveLegal = true;
 
@@ -50,6 +50,8 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
     let isCapturing = false;
     let isPromoting = false;
     let isCastling = false;
+    let isEnPassant = false;
+    const enPassantablePawn = document.querySelector("[data-en_passant_move_idx]") as HTMLImageElement;
 
     if (destinationSquare.innerHTML !== "") {
         const capturedPiece = (destinationSquare.children[0] as HTMLImageElement);
@@ -72,7 +74,6 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
 
     switch (ID) {
         case Pieces.Pawn:
-            // todo: en passant
             if (!isCapturing && fileA !== fileB) { console.error("cant change files when not capturing"); isMoveLegal = false };
             if (isCapturing && fileA === fileB) { console.error("cant stay on the same file while capturing"); isMoveLegal = false };
             if (isCapturing && rankA === rankB) { console.error("cant stay on the same rank while capturing"); isMoveLegal = false };
@@ -90,6 +91,7 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
                 isPromoting = true;
             }
 
+            // && !isJustChecking
             if (isMoveLegal && isPromoting) {
                 // because the piece somehow keeps dragging when the modal pops up
                 resetDraggedPieceStyles(document.querySelector(".dragged")!);
@@ -108,6 +110,49 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
 
                 destinationSquare.replaceChildren(IMAGE_ELEMENT);
                 startSquare.innerHTML = "";
+            }
+
+            if (enPassantablePawn && !isJustChecking) {
+                const enPassantData = enPassantablePawn.dataset.en_passant_move_idx;
+
+                if (enPassantData) {
+                    if (moveIdx > +enPassantData) {
+                        enPassantablePawn.dataset.en_passant_move_idx = undefined;
+                    }
+                }
+            }
+
+            if (enPassantablePawn) {
+                const enPassantData = enPassantablePawn.dataset.en_passant_move_idx;
+
+                if (enPassantData) {
+                    if (moveIdx === +enPassantData) {
+                        const enPassantablePawnSquare = enPassantablePawn.parentNode as HTMLDivElement;
+
+                        if (enPassantablePawnSquare) {
+                            const posData = enPassantablePawnSquare.dataset.pos;
+
+                            if (posData) {
+                                const f = FILES.indexOf(posData[0]);
+                                const r = +posData[1] + (color === "white" ? 1 : -1);
+
+                                if (Math.abs(rankA - r) === 1) {
+                                    if (f === fileB && rankB === r) {
+                                        isMoveLegal = true;
+                                        isCapturing = true;
+                                        isEnPassant = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            if (dr === 2 && !isJustChecking) {
+                const piece = document.querySelector(".dragged")! as HTMLImageElement;
+
+                piece.dataset.en_passant_move_idx = (moveIdx + 1).toString();
             }
 
             break
@@ -228,8 +273,25 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
 
             break
         case Pieces.Queen:
-            const { isMoveLegal: actsAsABishop } = await checkLegality({ ID: Pieces.Bishop, color, pieceMoveCount, startSquare, destinationSquare });
-            const { isMoveLegal: actsAsARook } = await checkLegality({ ID: Pieces.Rook, color, pieceMoveCount, startSquare, destinationSquare });
+            const { isMoveLegal: actsAsABishop } = await checkLegality(
+                {
+                    ID: Pieces.Bishop,
+                    color,
+                    pieceMoveCount,
+                    startSquare,
+                    destinationSquare,
+                    moveIdx: moveIdx,
+                    isJustChecking
+                });
+
+            const { isMoveLegal: actsAsARook } = await checkLegality(
+                {
+                    ID: Pieces.Rook,
+                    color, pieceMoveCount,
+                    startSquare, destinationSquare,
+                    isJustChecking,
+                    moveIdx
+                });
 
             if (!actsAsABishop && !actsAsARook) isMoveLegal = false;
 
@@ -279,6 +341,6 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
     }
 
 
-    return { isMoveLegal, isCapturing, isPromoting, isCastling };
+    return { isMoveLegal, isCapturing, isPromoting, isCastling, isEnPassant, enPassantablePawn };
 }
 

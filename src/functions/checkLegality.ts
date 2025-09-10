@@ -1,8 +1,8 @@
 import { getPromotionSelection } from "@functions";
 import { FILES } from "@constants";
 import { Pieces } from "@enums";
-import { MoveData, MoveLegality } from "@interfaces";
-import { resetDraggedPieceStyles } from "@utils";
+import { MoveData, MoveLegality, SquareAndPiece } from "@interfaces";
+import { getSquareAndPieceFromPos, resetDraggedPieceStyles } from "@utils";
 import { PieceColor } from "@types";
 import { CastlingMap } from "@maps";
 
@@ -11,10 +11,10 @@ function checkForObstacles(directions: string[][], pos: string, color: PieceColo
 
     for (const direction of directions) {
         for (const pos of direction) {
-            const square = document.querySelector(`[data-pos=${pos}]`)!;
+            const { square, piece } = getSquareAndPieceFromPos(pos) as SquareAndPiece;
 
             if (square.hasChildNodes()) {
-                if ((square.querySelector("img") as HTMLImageElement).dataset.color !== color) {
+                if (piece!.dataset.color !== color) {
                     allAvailableMoves.push(pos);
                     break;
                 } else {
@@ -90,6 +90,9 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
             } else if (color === "black" && rankB === 1) {
                 isPromoting = true;
             }
+
+            // wtf is this doing in check legality 
+            // this isnt the functions job
 
             if (isMoveLegal && isPromoting && !isJustChecking) {
                 // because the piece somehow keeps dragging when the modal pops up

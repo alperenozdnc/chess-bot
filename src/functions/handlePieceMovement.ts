@@ -1,8 +1,9 @@
 import { CAPTURE_SOUND, MOVE_SOUND } from "@constants";
 import { Piece, PieceColor } from "@types";
-import { resetDraggedPieceStyles } from "@utils";
+import { getSquareAndPieceFromPos, resetDraggedPieceStyles } from "@utils";
 import { checkLegality, listLegalMoves } from "@functions";
 import { CastlingMap } from "@maps";
+import { SquareAndPiece } from "@interfaces";
 
 function undoMove(originalSquare: HTMLDivElement, piece: HTMLImageElement) {
     originalSquare.appendChild(piece);
@@ -148,14 +149,14 @@ export function handlePieceMovement() {
                         const posA = castlingSquares[castlingSquares.length - 1];
                         const posB = castlingSquares[0];
 
-                        const firstPos = document.querySelector(`[data-pos="${posA}"]`)!;
-                        const secondPos = document.querySelector(`[data-pos="${posB}"]`)!;
+                        const { square: squareFirst, piece: pieceFirst } = getSquareAndPieceFromPos(posA) as SquareAndPiece;
+                        const { square: squareSecond } = getSquareAndPieceFromPos(posB) as SquareAndPiece;
+                        const rook = pieceFirst!;
 
-                        const rook = firstPos.querySelector("img")!;
                         (rook.dataset.move_count as unknown as number) = +(rook.dataset.move_count ?? 0) + 1;
 
-                        firstPos.innerHTML = "";
-                        secondPos.appendChild(rook);
+                        squareFirst.innerHTML = "";
+                        squareSecond.appendChild(rook);
                     }
 
                     if (isEnPassant && enPassantablePawn) {

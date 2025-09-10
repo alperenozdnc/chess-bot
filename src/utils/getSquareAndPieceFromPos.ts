@@ -1,7 +1,4 @@
-interface SquareAndPiece {
-    square: HTMLDivElement;
-    piece?: HTMLImageElement;
-}
+import { SquareAndPiece } from "@interfaces";
 
 export function getSquareAndPieceFromPos(pos: string): SquareAndPiece | void {
     const square = document.querySelector(`[data-pos=${pos}]`) as HTMLDivElement;

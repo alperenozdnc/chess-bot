@@ -4,5 +4,5 @@ export enum Pieces {
     Bishop = "b",
     Rook = "r",
     Queen = "q",
-    King = "k"
+    King = "k",
 }

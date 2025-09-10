@@ -4,4 +4,3 @@ export const CastlingMap = new Map<string, string[]>([
     ["c8", ["d8", "c8", "b8", "a8"]],
     ["g8", ["f8", "g8", "h8"]],
 ]);
-

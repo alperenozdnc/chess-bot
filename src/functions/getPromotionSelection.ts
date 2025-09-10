@@ -2,9 +2,17 @@ import { Pieces } from "@enums";
 import { Piece, PieceColor } from "@types";
 
 export async function getPromotionSelection(color: PieceColor): Promise<Piece> {
-    const PROMOTION_SCREEN = document.getElementById("promotion-screen") as HTMLDivElement;
-    const PROMOTION_PIECES = [Pieces.Queen, Pieces.Rook, Pieces.Knight, Pieces.Bishop];
-    const PROMOTION_PIECES_ELEMENTS = PROMOTION_SCREEN.querySelectorAll(".piece-selection");
+    const PROMOTION_SCREEN = document.getElementById(
+        "promotion-screen",
+    ) as HTMLDivElement;
+    const PROMOTION_PIECES = [
+        Pieces.Queen,
+        Pieces.Rook,
+        Pieces.Knight,
+        Pieces.Bishop,
+    ];
+    const PROMOTION_PIECES_ELEMENTS =
+        PROMOTION_SCREEN.querySelectorAll(".piece-selection");
 
     PROMOTION_SCREEN.classList.add("promotion-screen-visible");
 
@@ -22,12 +30,12 @@ export async function getPromotionSelection(color: PieceColor): Promise<Piece> {
     const selectionPromise = new Promise<string>((resolve) => {
         PROMOTION_PIECES_ELEMENTS.forEach((button: Element) => {
             button.addEventListener("click", () => {
-                resolve(((button as HTMLButtonElement).dataset.id) as string);
+                resolve((button as HTMLButtonElement).dataset.id as string);
 
                 PROMOTION_SCREEN.classList.remove("promotion-screen-visible");
             });
         });
     });
 
-    return selectionPromise.then(val => val as Piece);
+    return selectionPromise.then((val) => val as Piece);
 }

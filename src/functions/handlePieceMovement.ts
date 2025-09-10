@@ -48,15 +48,14 @@ export function handlePieceMovement() {
             let pieceCanMove = checkTurn(moveIdx, pieceColor);
 
             if (pieceCanMove) {
-                const legalMoves = await listLegalMoves(
-                    {
-                        piece: draggedPiece.dataset.pieceid! as Piece,
-                        startSquare: originalSquare,
-                        color: draggedPiece.dataset.color! as unknown as PieceColor,
-                        pieceMoveCount: +draggedPiece.dataset.move_count! as unknown as number,
-                        moveIdx: moveIdx
-                    }
-                );
+                const legalMoves = await listLegalMoves({
+                    piece: draggedPiece.dataset.pieceid! as Piece,
+                    startSquare: originalSquare,
+                    color: draggedPiece.dataset.color! as unknown as PieceColor,
+                    pieceMoveCount: +draggedPiece.dataset
+                        .move_count! as unknown as number,
+                    moveIdx: moveIdx,
+                });
 
                 for (const legalMove of legalMoves) {
                     highlightedSquares.push(legalMove.square);
@@ -88,14 +87,21 @@ export function handlePieceMovement() {
                 const pieceColor = draggedPiece.dataset.color as PieceColor;
                 let pieceCanMove = checkTurn(moveIdx, pieceColor);
                 let target = document.elementFromPoint(e.clientX, e.clientY)!;
-                target = (target.classList.contains("piece") ? target.parentElement : target)!;
+                target = (
+                    target.classList.contains("piece")
+                        ? target.parentElement
+                        : target
+                )!;
 
                 if (highlightedSquares.length > 0) {
                     for (const square of highlightedSquares) {
-                        square.classList.remove("highlight", "capturable-highlight");
+                        square.classList.remove(
+                            "highlight",
+                            "capturable-highlight",
+                        );
                     }
 
-                    highlightedSquares = []
+                    highlightedSquares = [];
                 }
 
                 if (!target) return;
@@ -113,23 +119,36 @@ export function handlePieceMovement() {
 
                 let pieceid = draggedPiece.dataset.pieceid!.toUpperCase();
 
-                const { isMoveLegal, isCapturing, isPromoting, isCastling, isEnPassant, enPassantablePawn } = await checkLegality({
-                    ID: (pieceid.toLowerCase() as Piece),
+                const {
+                    isMoveLegal,
+                    isCapturing,
+                    isPromoting,
+                    isCastling,
+                    isEnPassant,
+                    enPassantablePawn,
+                } = await checkLegality({
+                    ID: pieceid.toLowerCase() as Piece,
                     color: pieceColor,
                     pieceMoveCount: Number(draggedPiece.dataset.move_count),
                     startSquare: originalSquare,
                     destinationSquare: target as HTMLDivElement,
                     moveIdx: moveIdx,
-                    isJustChecking: false
+                    isJustChecking: false,
                 });
 
-                if (target.classList.contains("square") && pieceCanMove && target !== originalSquare && isMoveLegal) {
+                if (
+                    target.classList.contains("square") &&
+                    pieceCanMove &&
+                    target !== originalSquare &&
+                    isMoveLegal
+                ) {
                     let pos = (target as HTMLDivElement).dataset.pos;
 
                     let notation = pos;
                     if (pieceid !== "P") notation = `${pieceid}${notation}`;
 
-                    (draggedPiece.dataset.move_count as unknown as number) = +(draggedPiece.dataset.move_count ?? 0) + 1;
+                    (draggedPiece.dataset.move_count as unknown as number) =
+                        +(draggedPiece.dataset.move_count ?? 0) + 1;
 
                     ++moveIdx;
 
@@ -146,14 +165,18 @@ export function handlePieceMovement() {
 
                     if (isCastling) {
                         const castlingSquares = CastlingMap.get(pos!)!;
-                        const posA = castlingSquares[castlingSquares.length - 1];
+                        const posA =
+                            castlingSquares[castlingSquares.length - 1];
                         const posB = castlingSquares[0];
 
-                        const { square: squareFirst, piece: pieceFirst } = getSquareAndPieceFromPos(posA) as SquareAndPiece;
-                        const { square: squareSecond } = getSquareAndPieceFromPos(posB) as SquareAndPiece;
+                        const { square: squareFirst, piece: pieceFirst } =
+                            getSquareAndPieceFromPos(posA) as SquareAndPiece;
+                        const { square: squareSecond } =
+                            getSquareAndPieceFromPos(posB) as SquareAndPiece;
                         const rook = pieceFirst!;
 
-                        (rook.dataset.move_count as unknown as number) = +(rook.dataset.move_count ?? 0) + 1;
+                        (rook.dataset.move_count as unknown as number) =
+                            +(rook.dataset.move_count ?? 0) + 1;
 
                         squareFirst.innerHTML = "";
                         squareSecond.appendChild(rook);

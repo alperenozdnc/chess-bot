@@ -2,16 +2,27 @@ import { getPromotionSelection } from "@functions";
 import { FILES } from "@constants";
 import { Pieces } from "@enums";
 import { MoveData, MoveLegality, SquareAndPiece } from "@interfaces";
-import { createPiece, getSquareAndPieceFromPos, resetDraggedPieceStyles } from "@utils";
+import {
+    createPiece,
+    getSquareAndPieceFromPos,
+    resetDraggedPieceStyles,
+} from "@utils";
 import { PieceColor } from "@types";
 import { CastlingMap } from "@maps";
 
-function checkForObstacles(directions: string[][], pos: string, color: PieceColor, castleChecking = false): boolean | string[] {
+function checkForObstacles(
+    directions: string[][],
+    pos: string,
+    color: PieceColor,
+    castleChecking = false,
+): boolean | string[] {
     const allAvailableMoves: string[] = [];
 
     for (const direction of directions) {
         for (const pos of direction) {
-            const { square, piece } = getSquareAndPieceFromPos(pos) as SquareAndPiece;
+            const { square, piece } = getSquareAndPieceFromPos(
+                pos,
+            ) as SquareAndPiece;
 
             if (square.hasChildNodes()) {
                 if (piece!.dataset.color !== color) {
@@ -28,13 +39,24 @@ function checkForObstacles(directions: string[][], pos: string, color: PieceColo
 
     if (castleChecking) return allAvailableMoves;
 
-    if (!allAvailableMoves.includes(pos)) { console.error("cant jump over pieces"); return false; }
+    if (!allAvailableMoves.includes(pos)) {
+        console.error("cant jump over pieces");
+        return false;
+    }
 
     return true;
 }
 
 export async function checkLegality(data: MoveData): Promise<MoveLegality> {
-    const { ID, color, pieceMoveCount, startSquare, destinationSquare, moveIdx, isJustChecking } = data;
+    const {
+        ID,
+        color,
+        pieceMoveCount,
+        startSquare,
+        destinationSquare,
+        moveIdx,
+        isJustChecking,
+    } = data;
 
     let isMoveLegal = true;
 
@@ -51,10 +73,12 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
     let isPromoting = false;
     let isCastling = false;
     let isEnPassant = false;
-    const enPassantablePawn = document.querySelector("[data-en_passant_move_idx]") as HTMLImageElement;
+    const enPassantablePawn = document.querySelector(
+        "[data-en_passant_move_idx]",
+    ) as HTMLImageElement;
 
     if (destinationSquare.innerHTML !== "") {
-        const capturedPiece = (destinationSquare.children[0] as HTMLImageElement);
+        const capturedPiece = destinationSquare.children[0] as HTMLImageElement;
 
         if (color === capturedPiece.dataset.color) {
             console.error("you cant capture your own piece");
@@ -74,64 +98,97 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
 
     switch (ID) {
         case Pieces.Pawn:
-            if (!isCapturing && fileA !== fileB) { console.error("cant change files when not capturing"); isMoveLegal = false };
-            if (isCapturing && fileA === fileB) { console.error("cant stay on the same file while capturing"); isMoveLegal = false };
-            if (isCapturing && rankA === rankB) { console.error("cant stay on the same rank while capturing"); isMoveLegal = false };
-            if (isCapturing && dr > 1) { console.error("cant change more than one rank while capturing"); isMoveLegal = false };
-            if (isCapturing && Math.abs(fileA - fileB) > 1) { console.error("can only capture to the left or right"); isMoveLegal = false; }
-            if (color === "white" && rankA > rankB) { console.error("cant decrease rank as white"); isMoveLegal = false };
-            if (color === "black" && rankA < rankB) { console.error("cant increase rank as black"); isMoveLegal = false };
-            if (dr > 2) { console.error("cant move for more than 2 squares"); isMoveLegal = false; }
-            if (pieceMoveCount > 0 && dr > 1) { console.error("cant move more than 1 square after first move"); isMoveLegal = false; }
+            if (!isCapturing && fileA !== fileB) {
+                console.error("cant change files when not capturing");
+                isMoveLegal = false;
+            }
+            if (isCapturing && fileA === fileB) {
+                console.error("cant stay on the same file while capturing");
+                isMoveLegal = false;
+            }
+            if (isCapturing && rankA === rankB) {
+                console.error("cant stay on the same rank while capturing");
+                isMoveLegal = false;
+            }
+            if (isCapturing && dr > 1) {
+                console.error("cant change more than one rank while capturing");
+                isMoveLegal = false;
+            }
+            if (isCapturing && Math.abs(fileA - fileB) > 1) {
+                console.error("can only capture to the left or right");
+                isMoveLegal = false;
+            }
+            if (color === "white" && rankA > rankB) {
+                console.error("cant decrease rank as white");
+                isMoveLegal = false;
+            }
+            if (color === "black" && rankA < rankB) {
+                console.error("cant increase rank as black");
+                isMoveLegal = false;
+            }
+            if (dr > 2) {
+                console.error("cant move for more than 2 squares");
+                isMoveLegal = false;
+            }
+            if (pieceMoveCount > 0 && dr > 1) {
+                console.error("cant move more than 1 square after first move");
+                isMoveLegal = false;
+            }
 
             if (color === "white" && rankB === 8) {
                 isPromoting = true;
-
             } else if (color === "black" && rankB === 1) {
                 isPromoting = true;
             }
 
-            // wtf is this doing in check legality 
+            // wtf is this doing in check legality
             // this isnt the functions job
 
             if (isMoveLegal && isPromoting && !isJustChecking) {
                 // because the piece somehow keeps dragging when the modal pops up
                 resetDraggedPieceStyles(document.querySelector(".dragged")!);
 
-                const selection = await getPromotionSelection(color) as string;
+                const selection = (await getPromotionSelection(
+                    color,
+                )) as string;
 
                 destinationSquare.innerHTML = "";
                 startSquare.innerHTML = "";
 
                 createPiece({
                     id: color === "white" ? selection.toUpperCase() : selection,
-                    pos: destinationSquare.dataset.pos!
+                    pos: destinationSquare.dataset.pos!,
                 });
             }
 
             if (enPassantablePawn && !isJustChecking) {
-                const enPassantData = enPassantablePawn.dataset.en_passant_move_idx;
+                const enPassantData =
+                    enPassantablePawn.dataset.en_passant_move_idx;
 
                 if (enPassantData) {
                     if (moveIdx > +enPassantData) {
-                        enPassantablePawn.dataset.en_passant_move_idx = undefined;
+                        enPassantablePawn.dataset.en_passant_move_idx =
+                            undefined;
                     }
                 }
             }
 
             if (enPassantablePawn) {
-                const enPassantData = enPassantablePawn.dataset.en_passant_move_idx;
+                const enPassantData =
+                    enPassantablePawn.dataset.en_passant_move_idx;
 
                 if (enPassantData) {
                     if (moveIdx === +enPassantData) {
-                        const enPassantablePawnSquare = enPassantablePawn.parentNode as HTMLDivElement;
+                        const enPassantablePawnSquare =
+                            enPassantablePawn.parentNode as HTMLDivElement;
 
                         if (enPassantablePawnSquare) {
                             const posData = enPassantablePawnSquare.dataset.pos;
 
                             if (posData) {
                                 const f = FILES.indexOf(posData[0]);
-                                const r = +posData[1] + (color === "white" ? 1 : -1);
+                                const r =
+                                    +posData[1] + (color === "white" ? 1 : -1);
 
                                 if (Math.abs(rankA - r) === 1) {
                                     if (f === fileB && rankB === r) {
@@ -147,21 +204,41 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
             }
 
             if (dr === 2 && !isJustChecking) {
-                const piece = document.querySelector(".dragged")! as HTMLImageElement;
+                const piece = document.querySelector(
+                    ".dragged",
+                )! as HTMLImageElement;
 
                 piece.dataset.en_passant_move_idx = (moveIdx + 1).toString();
             }
 
-            break
+            break;
         case Pieces.Knight:
-            if (df < 1) { console.error("cant change less than one file"); isMoveLegal = false; }
-            if (df > 2) { console.error("cant change more than two files"); isMoveLegal = false; }
-            if (dr > 2) { console.error("cant change more than two ranks"); isMoveLegal = false; }
-            if (dr < 1) { console.error("cant change less than one rank"); isMoveLegal = false; }
-            if (df === 1 && dr !== 2) { console.error("cant not move 2 files when moving vertically"); isMoveLegal = false; }
-            if (dr === 2 && df !== 1) { console.error("cant not move 1 file when moving sideways"); isMoveLegal = false; }
+            if (df < 1) {
+                console.error("cant change less than one file");
+                isMoveLegal = false;
+            }
+            if (df > 2) {
+                console.error("cant change more than two files");
+                isMoveLegal = false;
+            }
+            if (dr > 2) {
+                console.error("cant change more than two ranks");
+                isMoveLegal = false;
+            }
+            if (dr < 1) {
+                console.error("cant change less than one rank");
+                isMoveLegal = false;
+            }
+            if (df === 1 && dr !== 2) {
+                console.error("cant not move 2 files when moving vertically");
+                isMoveLegal = false;
+            }
+            if (dr === 2 && df !== 1) {
+                console.error("cant not move 1 file when moving sideways");
+                isMoveLegal = false;
+            }
 
-            break
+            break;
         case Pieces.Bishop:
             if (df === 0) {
                 console.error("cant not change file");
@@ -197,7 +274,7 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
                     topLeftDir.push(`${fileString}${r}`);
                 }
 
-                // file decrease, rank decrease (move bottom left diagonally) 
+                // file decrease, rank decrease (move bottom left diagonally)
                 if (r2 >= 1) {
                     bottomLeftDir.push(`${fileString}${r2}`);
                 }
@@ -205,7 +282,6 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
                 r++;
                 r2--;
             }
-
 
             for (let f = fileA + 1; f < 8; f++) {
                 const fileString = FILES[f];
@@ -215,7 +291,7 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
                     topRightDir.push(`${fileString}${r3}`);
                 }
 
-                // file increase, rank decrease (move bottom right diagonally) 
+                // file increase, rank decrease (move bottom right diagonally)
                 if (r4 >= 1) {
                     bottomRightDir.push(`${fileString}${r4}`);
                 }
@@ -224,11 +300,18 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
                 r4--;
             }
 
-            isMoveLegal = checkForObstacles([topLeftDir, topRightDir, bottomLeftDir, bottomRightDir], posB, color) as boolean;
+            isMoveLegal = checkForObstacles(
+                [topLeftDir, topRightDir, bottomLeftDir, bottomRightDir],
+                posB,
+                color,
+            ) as boolean;
 
-            break
+            break;
         case Pieces.Rook:
-            if (df >= 1 && dr !== 0) { console.error("cant move up while moving sideways"); isMoveLegal = false; }
+            if (df >= 1 && dr !== 0) {
+                console.error("cant move up while moving sideways");
+                isMoveLegal = false;
+            }
 
             let up = [];
             let left = [];
@@ -266,42 +349,56 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
             left = left.reverse();
             down = down.reverse();
 
-            isMoveLegal = checkForObstacles([up, down, left, right], posB, color) as boolean;
+            isMoveLegal = checkForObstacles(
+                [up, down, left, right],
+                posB,
+                color,
+            ) as boolean;
 
-            break
+            break;
         case Pieces.Queen:
-            const { isMoveLegal: actsAsABishop } = await checkLegality(
-                {
-                    ID: Pieces.Bishop,
-                    color,
-                    pieceMoveCount,
-                    startSquare,
-                    destinationSquare,
-                    moveIdx: moveIdx,
-                    isJustChecking
-                });
+            const { isMoveLegal: actsAsABishop } = await checkLegality({
+                ID: Pieces.Bishop,
+                color,
+                pieceMoveCount,
+                startSquare,
+                destinationSquare,
+                moveIdx: moveIdx,
+                isJustChecking,
+            });
 
-            const { isMoveLegal: actsAsARook } = await checkLegality(
-                {
-                    ID: Pieces.Rook,
-                    color, pieceMoveCount,
-                    startSquare, destinationSquare,
-                    isJustChecking,
-                    moveIdx
-                });
+            const { isMoveLegal: actsAsARook } = await checkLegality({
+                ID: Pieces.Rook,
+                color,
+                pieceMoveCount,
+                startSquare,
+                destinationSquare,
+                isJustChecking,
+                moveIdx,
+            });
 
             if (!actsAsABishop && !actsAsARook) isMoveLegal = false;
 
-            break
+            break;
         case Pieces.King:
             // the squares that have to be empty corresponding to the castle activation square
-            function checkCastlingRights(pos: string, castlingPieces: string[]): boolean {
-                const emptySquares = checkForObstacles([castlingPieces], pos, color, true) as string[];
+            function checkCastlingRights(
+                pos: string,
+                castlingPieces: string[],
+            ): boolean {
+                const emptySquares = checkForObstacles(
+                    [castlingPieces],
+                    pos,
+                    color,
+                    true,
+                ) as string[];
                 const rookPos = castlingPieces[castlingPieces.length - 1];
 
                 // .length - 1 is accounting for the rook here
                 if (emptySquares.length === castlingPieces.length - 1) {
-                    const rookSquare = document.querySelector(`[data-pos=${rookPos}]`)!;
+                    const rookSquare = document.querySelector(
+                        `[data-pos=${rookPos}]`,
+                    )!;
                     const piece = rookSquare.querySelector("img");
 
                     if (piece && piece.dataset.pieceid === Pieces.Rook) {
@@ -329,15 +426,28 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
             if (isCastling) {
                 isMoveLegal = true;
 
-                if (df == 2 && dr > 2) { console.error("cant move more than two files and one rank while castling"); isMoveLegal = false; }
+                if (df == 2 && dr > 2) {
+                    console.error(
+                        "cant move more than two files and one rank while castling",
+                    );
+                    isMoveLegal = false;
+                }
             } else {
-                if (df > 1 || dr > 1) { console.error("cant move more than a square"); isMoveLegal = false; }
+                if (df > 1 || dr > 1) {
+                    console.error("cant move more than a square");
+                    isMoveLegal = false;
+                }
             }
 
             break;
     }
 
-
-    return { isMoveLegal, isCapturing, isPromoting, isCastling, isEnPassant, enPassantablePawn };
+    return {
+        isMoveLegal,
+        isCapturing,
+        isPromoting,
+        isCastling,
+        isEnPassant,
+        enPassantablePawn,
+    };
 }
-

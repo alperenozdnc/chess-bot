@@ -3,4 +3,3 @@ export function resetDraggedPieceStyles(draggedPiece: HTMLImageElement) {
     draggedPiece.style.left = "";
     draggedPiece.style.top = "";
 }
-

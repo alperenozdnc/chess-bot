@@ -2,7 +2,7 @@ import { getPromotionSelection } from "@functions";
 import { FILES } from "@constants";
 import { Pieces } from "@enums";
 import { MoveData, MoveLegality, SquareAndPiece } from "@interfaces";
-import { getSquareAndPieceFromPos, resetDraggedPieceStyles } from "@utils";
+import { createPiece, getSquareAndPieceFromPos, resetDraggedPieceStyles } from "@utils";
 import { PieceColor } from "@types";
 import { CastlingMap } from "@maps";
 
@@ -100,18 +100,13 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
 
                 const selection = await getPromotionSelection(color) as string;
 
-                const IMAGE_ELEMENT = document.createElement("img");
-                IMAGE_ELEMENT.src = `./assets/${color === "white" ? selection.toUpperCase() : selection}.png`;
-
-                IMAGE_ELEMENT.dataset.color = color;
-                IMAGE_ELEMENT.dataset.pieceid = selection;
-                (IMAGE_ELEMENT.dataset.move_count as unknown as number) = 0;
-
-                IMAGE_ELEMENT.className = "piece";
-                IMAGE_ELEMENT.draggable = false;
-
-                destinationSquare.replaceChildren(IMAGE_ELEMENT);
+                destinationSquare.innerHTML = "";
                 startSquare.innerHTML = "";
+
+                createPiece({
+                    id: color === "white" ? selection.toUpperCase() : selection,
+                    pos: destinationSquare.dataset.pos!
+                });
             }
 
             if (enPassantablePawn && !isJustChecking) {

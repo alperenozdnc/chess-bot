@@ -1,5 +1,6 @@
 import { FILES, BOARD } from "@constants";
 import { Piece } from "@types";
+import { createPiece } from "@utils";
 
 export function drawBoardfromFEN(FEN: string, isBoardFlipped = false) {
     BOARD.innerHTML = "";
@@ -40,17 +41,7 @@ export function drawBoardfromFEN(FEN: string, isBoardFlipped = false) {
                     let piece: Piece = FEN[FENIdx] as Piece;
 
                     if (isNaN(piece as unknown as number)) {
-                        const IMAGE_ELEMENT = document.createElement("img");
-                        IMAGE_ELEMENT.src = `./assets/${piece}.png`;
-
-                        IMAGE_ELEMENT.dataset.color = piece.toLowerCase() === piece ? "black" : "white";
-                        IMAGE_ELEMENT.dataset.pieceid = piece.toLowerCase();
-                        (IMAGE_ELEMENT.dataset.move_count as unknown as number) = 0;
-
-                        IMAGE_ELEMENT.className = "piece";
-                        IMAGE_ELEMENT.draggable = false;
-
-                        SQUARE_ELEMENT.appendChild(IMAGE_ELEMENT);
+                        createPiece({ id: piece, pos: SQUARE_ELEMENT.dataset.pos });
                     } else {
                         spacesLeft += +piece - 1;
                     }

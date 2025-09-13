@@ -122,11 +122,20 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
             if (pieceMoveCount > 0 && dr > 1) {
                 isMoveLegal = false;
             }
-
             if (color === "white" && rankB === 8) {
                 isPromoting = true;
             } else if (color === "black" && rankB === 1) {
                 isPromoting = true;
+            }
+
+            if (dr === 2) {
+                const offset = color === "white" ? -1 : 1;
+
+                const data = getSquareAndPieceFromPos(`${FILES[fileA]}${rankB + offset}`) as SquareAndPiece;
+
+                if (data.square) {
+                    if (data.piece) isMoveLegal = false;
+                }
             }
 
             // wtf is this doing in check legality

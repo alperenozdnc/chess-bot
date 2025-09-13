@@ -1,7 +1,7 @@
 import { CAPTURE_SOUND, MOVE_SOUND } from "@constants";
 import { Piece, PieceColor } from "@types";
 import { getSquareAndPieceFromPos, resetDraggedPieceStyles } from "@utils";
-import { checkLegality, listLegalMoves } from "@functions";
+import { checkForCheckmate, checkLegality, listLegalMoves } from "@functions";
 import { CastlingMap } from "@maps";
 import { SquareAndPiece } from "@interfaces";
 
@@ -86,6 +86,7 @@ export function handlePieceMovement() {
         document.addEventListener("mouseup", async function onMouseUp(e) {
             if (draggedPiece) {
                 const pieceColor = draggedPiece.dataset.color as PieceColor;
+
                 let pieceCanMove = checkTurn(moveIdx, pieceColor);
                 let target = document.elementFromPoint(e.clientX, e.clientY)!;
                 target = (
@@ -188,6 +189,15 @@ export function handlePieceMovement() {
                     if (isEnPassant && enPassantablePawn) {
                         enPassantablePawn.remove();
                     }
+
+                    if (isChecking) {
+                        const isCheckmate = await checkForCheckmate(moveIdx + 1, pieceColor === "white" ? "black" : "white");
+
+                        if (isCheckmate) {
+                            window.alert("checkmate.");
+                            document.location.reload();
+                        }
+                    }
                 } else {
                     undoMove(originalSquare, draggedPiece);
                 }
@@ -201,4 +211,5 @@ export function handlePieceMovement() {
             draggedPiece = null;
         });
     });
+
 }

@@ -15,11 +15,11 @@ interface Position {
     file: number
 }
 
-function findFileIdxFromLetter(file: string): number {
+export function findFileIdxFromLetter(file: string): number {
     return FILES.indexOf(file);
 }
 
-function rankToIndex(rank: number): number {
+export function rankToIndex(rank: number): number {
     return rank - 1;
 }
 

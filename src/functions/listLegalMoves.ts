@@ -20,6 +20,7 @@ export async function listLegalMoves({
     moveIdx,
 }: Data): Promise<LegalMoveData[]> {
     let squares: HTMLDivElement[] = [];
+
     document
         .querySelectorAll(".square")
         .forEach((square) => squares.push(square as HTMLDivElement));

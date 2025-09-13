@@ -6,4 +6,7 @@ export const CAPTURE_SOUND = new Audio(
 export const MOVE_SOUND = new Audio(
     "https://images.chesscomfiles.com/chess-themes/sounds/_MP3_/default/move-self.mp3",
 );
+export const MATE_SOUND = new Audio(
+    "https://images.chesscomfiles.com/chess-themes/sounds/_WEBM_/default/game-end.webm",
+);
 export const BOARD = document.getElementById("board-wrapper") as HTMLDivElement;

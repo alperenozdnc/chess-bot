@@ -1,7 +1,7 @@
-import { CAPTURE_SOUND, MOVE_SOUND } from "@constants";
+import { CAPTURE_SOUND, INITIAL_POSITION, MATE_SOUND, MOVE_SOUND } from "@constants";
 import { Piece, PieceColor } from "@types";
 import { getSquareAndPieceFromPos, resetDraggedPieceStyles } from "@utils";
-import { checkForCheckmate, checkLegality, listLegalMoves } from "@functions";
+import { checkForCheckmate, checkLegality, drawBoardfromFEN, listLegalMoves } from "@functions";
 import { CastlingMap } from "@maps";
 import { SquareAndPiece } from "@interfaces";
 
@@ -26,8 +26,16 @@ export function handlePieceMovement() {
 
     let offsetX = 0;
     let offsetY = 0;
-
     let moveIdx = 0;
+
+    const resetButton = document.getElementById(
+        "reset-button",
+    ) as HTMLButtonElement;
+
+    resetButton!.addEventListener("click", () => {
+        moveIdx = 0;
+        drawBoardfromFEN(INITIAL_POSITION);
+    });
 
     document.addEventListener("mousedown", async (e) => {
         if ((e.target as HTMLElement).classList.contains("piece")) {
@@ -194,8 +202,9 @@ export function handlePieceMovement() {
                         const isCheckmate = await checkForCheckmate(moveIdx + 1, pieceColor === "white" ? "black" : "white");
 
                         if (isCheckmate) {
-                            window.alert("checkmate.");
-                            document.location.reload();
+                            MATE_SOUND.play();
+
+                            window.alert(`checkmate! ${pieceColor} wins.`);
                         }
                     }
                 } else {

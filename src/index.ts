@@ -2,7 +2,7 @@ import { INITIAL_POSITION } from "@constants";
 import {
     handlePieceMovement,
     drawBoardfromFEN,
-    handleBoardFlipping,
+    handleBoardFlipping
 } from "@functions";
 
 drawBoardfromFEN(INITIAL_POSITION);

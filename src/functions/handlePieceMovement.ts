@@ -52,6 +52,7 @@ export function handlePieceMovement() {
                     piece: draggedPiece.dataset.pieceid! as Piece,
                     startSquare: originalSquare,
                     color: draggedPiece.dataset.color! as unknown as PieceColor,
+                    pieceElement: draggedPiece,
                     pieceMoveCount: +draggedPiece.dataset
                         .move_count! as unknown as number,
                     moveIdx: moveIdx,
@@ -129,6 +130,7 @@ export function handlePieceMovement() {
                 } = await checkLegality({
                     ID: pieceid.toLowerCase() as Piece,
                     color: pieceColor,
+                    pieceElement: draggedPiece,
                     pieceMoveCount: Number(draggedPiece.dataset.move_count),
                     startSquare: originalSquare,
                     destinationSquare: target as HTMLDivElement,

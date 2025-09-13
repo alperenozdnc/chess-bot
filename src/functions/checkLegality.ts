@@ -1,4 +1,4 @@
-import { getPromotionSelection } from "@functions";
+import { getPromotionSelection, isSquareAttacked } from "@functions";
 import { FILES } from "@constants";
 import { Pieces } from "@enums";
 import { MoveData, MoveLegality, SquareAndPiece } from "@interfaces";
@@ -51,6 +51,7 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
         ID,
         color,
         pieceMoveCount,
+        pieceElement,
         startSquare,
         destinationSquare,
         moveIdx,
@@ -354,6 +355,7 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
                 destinationSquare,
                 moveIdx: moveIdx,
                 isJustChecking,
+                pieceElement
             });
 
             const { isMoveLegal: actsAsARook } = await checkLegality({
@@ -364,6 +366,7 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
                 destinationSquare,
                 isJustChecking,
                 moveIdx,
+                pieceElement
             });
 
             if (!actsAsABishop && !actsAsARook) isMoveLegal = false;
@@ -426,6 +429,23 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
 
             break;
     }
+
+    const king = Array.from(document.querySelectorAll(`[data-pieceid=k]`)).filter(king => (king as HTMLImageElement).dataset.color === color)[0] as HTMLImageElement;
+    const kingPos = king.parentElement!.dataset.pos!;
+    let isCheck = isSquareAttacked({ pos: kingPos, attackerColor: color === "white" ? "black" : "white" });
+    const destinationElement = destinationSquare.firstChild!;
+
+    pieceElement.remove();
+    if (isCapturing) destinationSquare.innerHTML = "";
+    destinationSquare.appendChild(pieceElement);
+
+    isCheck = isSquareAttacked({ pos: ID === Pieces.King ? posB : kingPos, attackerColor: color === "white" ? "black" : "white" });
+
+    pieceElement.remove();
+    if (isCapturing) destinationSquare.appendChild(destinationElement);
+    startSquare.appendChild(pieceElement);
+
+    if (isCheck) isMoveLegal = false;
 
     return {
         isMoveLegal,

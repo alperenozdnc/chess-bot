@@ -90,6 +90,7 @@ export function isSquareAttacked(data: Data): boolean {
     const { pos: attackedPos, attackerColor } = data;
     const squareData = getSquareAndPieceFromPos(attackedPos) as SquareAndPiece;
 
+    if (!squareData) return false;
     if (!squareData.square) return false;
 
     const { piece: attackedPiece } = squareData;

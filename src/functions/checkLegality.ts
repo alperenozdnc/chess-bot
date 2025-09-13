@@ -10,7 +10,7 @@ import {
 import { PieceColor } from "@types";
 import { CastlingMap } from "@maps";
 
-function checkForObstacles(
+export function checkForObstacles(
     directions: string[][],
     pos: string,
     color: PieceColor,
@@ -21,7 +21,7 @@ function checkForObstacles(
     for (const direction of directions) {
         for (const pos of direction) {
             const { square, piece } = getSquareAndPieceFromPos(
-                pos,
+                pos
             ) as SquareAndPiece;
 
             if (square.hasChildNodes()) {
@@ -133,8 +133,10 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
 
                 const data = getSquareAndPieceFromPos(`${FILES[fileA]}${rankB + offset}`) as SquareAndPiece;
 
-                if (data.square) {
-                    if (data.piece) isMoveLegal = false;
+                if (data) {
+                    if (data.square) {
+                        if (data.piece) isMoveLegal = false;
+                    }
                 }
             }
 

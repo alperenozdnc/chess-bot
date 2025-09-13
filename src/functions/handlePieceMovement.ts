@@ -126,6 +126,7 @@ export function handlePieceMovement() {
                     isPromoting,
                     isCastling,
                     isEnPassant,
+                    isChecking,
                     enPassantablePawn,
                 } = await checkLegality({
                     ID: pieceid.toLowerCase() as Piece,
@@ -159,7 +160,7 @@ export function handlePieceMovement() {
                         target.appendChild(draggedPiece);
                     }
 
-                    if (isCapturing) {
+                    if (isCapturing || isChecking) {
                         CAPTURE_SOUND.play();
                     } else {
                         MOVE_SOUND.play();

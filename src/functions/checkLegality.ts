@@ -430,7 +430,11 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
             break;
     }
 
-    const king = Array.from(document.querySelectorAll(`[data-pieceid=k]`)).filter(king => (king as HTMLImageElement).dataset.color === color)[0] as HTMLImageElement;
+
+    const kings = Array.from(document.querySelectorAll(`[data-pieceid=k]`));
+    const king = kings.filter(king => (king as HTMLImageElement).dataset.color === color)[0] as HTMLImageElement;
+    const enemyKingPos = (kings.filter(king => (king as HTMLImageElement).dataset.color !== color)[0] as HTMLImageElement).parentElement!.dataset.pos;
+
     const kingPos = king.parentElement!.dataset.pos!;
     let isCheck = isSquareAttacked({ pos: kingPos, attackerColor: color === "white" ? "black" : "white" });
     const destinationElement = destinationSquare.firstChild!;
@@ -439,6 +443,7 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
     if (isCapturing) destinationSquare.innerHTML = "";
     destinationSquare.appendChild(pieceElement);
 
+    const isChecking = isSquareAttacked({ pos: enemyKingPos as string, attackerColor: color });
     isCheck = isSquareAttacked({ pos: ID === Pieces.King ? posB : kingPos, attackerColor: color === "white" ? "black" : "white" });
 
     pieceElement.remove();
@@ -453,6 +458,7 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
         isPromoting,
         isCastling,
         isEnPassant,
+        isChecking,
         enPassantablePawn,
     };
 }

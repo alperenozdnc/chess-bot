@@ -3,6 +3,7 @@ export interface MoveLegality {
     isCapturing: boolean;
     isPromoting: boolean;
     isCastling: boolean;
+    isChecking: boolean;
     isEnPassant: boolean;
     enPassantablePawn?: HTMLImageElement;
 }

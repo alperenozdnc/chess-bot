@@ -19,6 +19,24 @@ function checkTurn(moveIdx: number, color: PieceColor) {
     return false;
 }
 
+type GameEndReason = "checkmate" | "draw";
+type DrawReason = "stalemate" | "repetition" | "50 move rule";
+
+function handleEnd(reason: GameEndReason, winner?: PieceColor, drawReason?: DrawReason) {
+    MATE_SOUND.play();
+    const gameEndScreen = document.getElementById("game-end-screen")!;
+    const okButton = document.getElementById("ok-button")!;
+    const isDraw = reason === "draw";
+
+    gameEndScreen.classList.add("game-end-screen-visible");
+    gameEndScreen.querySelector("h2")!.innerText = `${isDraw ? reason : `${winner} won`} by ${isDraw ? drawReason : reason}`;
+
+    okButton.addEventListener("click", () => {
+        gameEndScreen.classList.remove("game-end-screen-visible");
+        (document.getElementById("reset-button") as HTMLButtonElement)!.click();
+    });
+}
+
 export function handlePieceMovement() {
     let FENPositions: string[] = [INITIAL_POSITION];
 
@@ -249,60 +267,18 @@ export function handlePieceMovement() {
                     const noLegalMovesLeft = await checkForCheckmate(moveIdx + 1, pieceColor === "white" ? "black" : "white");
 
                     if (isChecking && noLegalMovesLeft) {
-                        MATE_SOUND.play();
-                        const gameEndScreen = document.getElementById("game-end-screen")!;
-                        const okButton = document.getElementById("ok-button")!;
-
-                        gameEndScreen.classList.add("game-end-screen-visible");
-                        gameEndScreen.querySelector("h2")!.innerText = `${pieceColor} wins by checkmate`;
-
-                        okButton.addEventListener("click", () => {
-                            gameEndScreen.classList.remove("game-end-screen-visible");
-                            (document.getElementById("reset-button") as HTMLButtonElement)!.click();
-                        });
+                        handleEnd("checkmate", pieceColor);
                         FENPositions = [INITIAL_POSITION];
                     } else if (noLegalMovesLeft) {
-                        MATE_SOUND.play();
-                        const gameEndScreen = document.getElementById("game-end-screen")!;
-                        const okButton = document.getElementById("ok-button")!;
-
-                        gameEndScreen.classList.add("game-end-screen-visible");
-                        gameEndScreen.querySelector("h2")!.innerText = `draw by stalemate`;
-
-                        okButton.addEventListener("click", () => {
-                            gameEndScreen.classList.remove("game-end-screen-visible");
-                            (document.getElementById("reset-button") as HTMLButtonElement)!.click();
-                        });
+                        handleEnd("draw", pieceColor, "stalemate");
                         FENPositions = [INITIAL_POSITION];
                     } else if (threefoldRepetition) {
-                        MATE_SOUND.play();
-                        const gameEndScreen = document.getElementById("game-end-screen")!;
-                        const okButton = document.getElementById("ok-button")!;
-
-                        gameEndScreen.classList.add("game-end-screen-visible");
-                        gameEndScreen.querySelector("h2")!.innerText = `draw by repetition`;
-
-                        okButton.addEventListener("click", () => {
-                            gameEndScreen.classList.remove("game-end-screen-visible");
-                            (document.getElementById("reset-button") as HTMLButtonElement)!.click();
-                        });
-
+                        handleEnd("draw", pieceColor, "repetition");
                         FENPositions = [INITIAL_POSITION];
                     }
 
                     if (movesSincePawnAdvance >= 100 && movesSinceCapture >= 100) {
-                        MATE_SOUND.play();
-                        const gameEndScreen = document.getElementById("game-end-screen")!;
-                        const okButton = document.getElementById("ok-button")!;
-
-                        gameEndScreen.classList.add("game-end-screen-visible");
-                        gameEndScreen.querySelector("h2")!.innerText = `draw by 50-move-rule`;
-
-                        okButton.addEventListener("click", () => {
-                            gameEndScreen.classList.remove("game-end-screen-visible");
-                            (document.getElementById("reset-button") as HTMLButtonElement)!.click();
-                        });
-
+                        handleEnd("draw", pieceColor, "50 move rule");
                         FENPositions = [INITIAL_POSITION];
                     }
                 } else {

@@ -30,6 +30,9 @@ export function handlePieceMovement() {
     let offsetY = 0;
     let moveIdx = 0;
 
+    let movesSincePawnAdvance = 0;
+    let movesSinceCapture = 0;
+
     const resetButton = document.getElementById(
         "reset-button",
     ) as HTMLButtonElement;
@@ -176,6 +179,8 @@ export function handlePieceMovement() {
                     target.classList.add("move-highlight");
 
                     if (isCapturing) {
+                        movesSinceCapture = 0;
+
                         if (!isChecking) {
                             CAPTURE_SOUND.play();
                         } else {
@@ -185,6 +190,12 @@ export function handlePieceMovement() {
                         CHECK_SOUND.play();
                     } else {
                         MOVE_SOUND.play();
+                    }
+
+                    if (!isCapturing) movesSinceCapture += 1;
+
+                    if (pieceid.toLowerCase() === "p") {
+                        movesSincePawnAdvance = 0
                     }
 
                     if (isCastling) {
@@ -235,6 +246,7 @@ export function handlePieceMovement() {
                             gameEndScreen.classList.remove("game-end-screen-visible");
                             (document.getElementById("reset-button") as HTMLButtonElement)!.click();
                         });
+                        FENPositions = [INITIAL_POSITION];
                     } else if (noLegalMovesLeft) {
                         MATE_SOUND.play();
                         const gameEndScreen = document.getElementById("game-end-screen")!;
@@ -247,6 +259,7 @@ export function handlePieceMovement() {
                             gameEndScreen.classList.remove("game-end-screen-visible");
                             (document.getElementById("reset-button") as HTMLButtonElement)!.click();
                         });
+                        FENPositions = [INITIAL_POSITION];
                     } else if (threefoldRepetition) {
                         MATE_SOUND.play();
                         const gameEndScreen = document.getElementById("game-end-screen")!;
@@ -263,6 +276,21 @@ export function handlePieceMovement() {
                         FENPositions = [INITIAL_POSITION];
                     }
 
+                    if (movesSincePawnAdvance >= 100 && movesSinceCapture >= 100) {
+                        MATE_SOUND.play();
+                        const gameEndScreen = document.getElementById("game-end-screen")!;
+                        const okButton = document.getElementById("ok-button")!;
+
+                        gameEndScreen.classList.add("game-end-screen-visible");
+                        gameEndScreen.querySelector("h2")!.innerText = `draw by 50-move-rule`;
+
+                        okButton.addEventListener("click", () => {
+                            gameEndScreen.classList.remove("game-end-screen-visible");
+                            (document.getElementById("reset-button") as HTMLButtonElement)!.click();
+                        });
+
+                        FENPositions = [INITIAL_POSITION];
+                    }
                 } else {
                     undoMove(originalSquare, draggedPiece);
                 }

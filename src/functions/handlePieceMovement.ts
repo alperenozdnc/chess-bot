@@ -1,4 +1,4 @@
-import { CAPTURE_SOUND, INITIAL_POSITION, MATE_SOUND, MOVE_SOUND } from "@constants";
+import { CAPTURE_SOUND, CHECK_SOUND, INITIAL_POSITION, MATE_SOUND, MOVE_SOUND } from "@constants";
 import { Piece, PieceColor } from "@types";
 import { getSquareAndPieceFromPos, resetDraggedPieceStyles } from "@utils";
 import { checkForCheckmate, checkLegality, drawBoardfromFEN, listLegalMoves } from "@functions";
@@ -174,8 +174,14 @@ export function handlePieceMovement() {
                     originalSquare.classList.add("move-highlight");
                     target.classList.add("move-highlight");
 
-                    if (isCapturing || isChecking) {
-                        CAPTURE_SOUND.play();
+                    if (isCapturing) {
+                        if (!isChecking) {
+                            CAPTURE_SOUND.play();
+                        } else {
+                            CHECK_SOUND.play();
+                        }
+                    } else if (isChecking) {
+                        CHECK_SOUND.play();
                     } else {
                         MOVE_SOUND.play();
                     }

@@ -1,7 +1,7 @@
 import { CAPTURE_SOUND, CHECK_SOUND, INITIAL_POSITION, MATE_SOUND, MOVE_SOUND } from "@constants";
 import { Piece, PieceColor } from "@types";
-import { getSquareAndPieceFromPos, resetDraggedPieceStyles } from "@utils";
-import { checkForCheckmate, checkLegality, drawBoardfromFEN, getFEN, listLegalMoves } from "@functions";
+import { createPiece, getSquareAndPieceFromPos, resetDraggedPieceStyles } from "@utils";
+import { checkForCheckmate, checkLegality, drawBoardfromFEN, getFEN, getPromotionSelection, listLegalMoves } from "@functions";
 import { CastlingMap } from "@maps";
 import { SquareAndPiece } from "@interfaces";
 
@@ -172,6 +172,20 @@ export function handlePieceMovement() {
                     if (!isPromoting) {
                         target.innerHTML = "";
                         target.appendChild(draggedPiece);
+                    } else {
+                        resetDraggedPieceStyles(document.querySelector(".dragged")!);
+
+                        const selection = (await getPromotionSelection(
+                            pieceColor,
+                        )) as string;
+
+                        target.innerHTML = "";
+                        originalSquare.innerHTML = "";
+
+                        createPiece({
+                            id: pieceColor === "white" ? selection.toUpperCase() : selection,
+                            pos: (target as HTMLDivElement).dataset.pos!,
+                        });
                     }
 
                     document.querySelectorAll(".move-highlight").forEach(element => element.classList.remove("move-highlight"));

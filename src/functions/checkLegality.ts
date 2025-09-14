@@ -109,25 +109,6 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
             if (color === "white" && rankB === 8) isPromoting = true;
             if (color === "black" && rankB === 1) isPromoting = true;
 
-            // wtf is this doing in check legality
-            // this isnt the functions job
-            if (isMoveLegal && isPromoting && !isJustChecking) {
-                // because the piece somehow keeps dragging when the modal pops up
-                resetDraggedPieceStyles(document.querySelector(".dragged")!);
-
-                const selection = (await getPromotionSelection(
-                    color,
-                )) as string;
-
-                destinationSquare.innerHTML = "";
-                startSquare.innerHTML = "";
-
-                createPiece({
-                    id: color === "white" ? selection.toUpperCase() : selection,
-                    pos: destinationSquare.dataset.pos!,
-                });
-            }
-
             if (enPassantablePawn && !isJustChecking) {
                 const enPassantData =
                     enPassantablePawn.dataset.en_passant_move_idx;
@@ -271,10 +252,6 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
     startSquare.appendChild(pieceElement);
 
     if (isCheck) isMoveLegal = false;
-
-    if (isPromoting && !isJustChecking && isMoveLegal) {
-        startSquare.innerHTML = "";
-    }
 
     return {
         isMoveLegal,

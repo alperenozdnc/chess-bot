@@ -1,7 +1,7 @@
 import { CAPTURE_SOUND, CHECK_SOUND, INITIAL_POSITION, MATE_SOUND, MOVE_SOUND } from "@constants";
 import { Piece, PieceColor } from "@types";
 import { getSquareAndPieceFromPos, resetDraggedPieceStyles } from "@utils";
-import { checkForCheckmate, checkLegality, drawBoardfromFEN, listLegalMoves } from "@functions";
+import { checkForCheckmate, checkLegality, drawBoardfromFEN, getFEN, listLegalMoves } from "@functions";
 import { CastlingMap } from "@maps";
 import { SquareAndPiece } from "@interfaces";
 
@@ -20,6 +20,8 @@ function checkTurn(moveIdx: number, color: PieceColor) {
 }
 
 export function handlePieceMovement() {
+    let FENPositions: string[] = [INITIAL_POSITION];
+
     let draggedPiece: HTMLImageElement | null;
     let originalSquare: HTMLDivElement;
     let highlightedSquares: HTMLDivElement[] = [];
@@ -169,7 +171,6 @@ export function handlePieceMovement() {
                         target.appendChild(draggedPiece);
                     }
 
-
                     document.querySelectorAll(".move-highlight").forEach(element => element.classList.remove("move-highlight"));
                     originalSquare.classList.add("move-highlight");
                     target.classList.add("move-highlight");
@@ -209,6 +210,17 @@ export function handlePieceMovement() {
                         enPassantablePawn.remove();
                     }
 
+                    const FEN = getFEN();
+                    FENPositions.push(FEN);
+
+                    let threefoldRepetition = false;
+
+                    FENPositions.forEach(posA => {
+                        const freq = FENPositions.filter(posB => posA === posB).length;
+
+                        if (freq === 3) threefoldRepetition = true;
+                    });
+
                     const noLegalMovesLeft = await checkForCheckmate(moveIdx + 1, pieceColor === "white" ? "black" : "white");
 
                     if (isChecking && noLegalMovesLeft) {
@@ -235,7 +247,22 @@ export function handlePieceMovement() {
                             gameEndScreen.classList.remove("game-end-screen-visible");
                             (document.getElementById("reset-button") as HTMLButtonElement)!.click();
                         });
+                    } else if (threefoldRepetition) {
+                        MATE_SOUND.play();
+                        const gameEndScreen = document.getElementById("game-end-screen")!;
+                        const okButton = document.getElementById("ok-button")!;
+
+                        gameEndScreen.classList.add("game-end-screen-visible");
+                        gameEndScreen.querySelector("h2")!.innerText = `draw by repetition`;
+
+                        okButton.addEventListener("click", () => {
+                            gameEndScreen.classList.remove("game-end-screen-visible");
+                            (document.getElementById("reset-button") as HTMLButtonElement)!.click();
+                        });
+
+                        FENPositions = [INITIAL_POSITION];
                     }
+
                 } else {
                     undoMove(originalSquare, draggedPiece);
                 }

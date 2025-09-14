@@ -61,7 +61,7 @@ body {
 }
 
 .black {
-    background: rgb(30, 120, 150);
+    background: #A19CFF;
 }
 
 img {
@@ -243,4 +243,13 @@ img:hover {
     right: 0;
     background: rgba(0, 0, 0, 0.3);
     z-index: 5000;
+}
+
+.move-highlight::before {
+    content: "";
+    background: rgba(255, 253, 156, 0.7);
+    display: block;
+    position: absolute;
+    width: calc(100vh / 8);
+    height: calc(100vh / 8);
 }

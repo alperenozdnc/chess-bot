@@ -169,6 +169,11 @@ export function handlePieceMovement() {
                         target.appendChild(draggedPiece);
                     }
 
+
+                    document.querySelectorAll(".move-highlight").forEach(element => element.classList.remove("move-highlight"));
+                    originalSquare.classList.add("move-highlight");
+                    target.classList.add("move-highlight");
+
                     if (isCapturing || isChecking) {
                         CAPTURE_SOUND.play();
                     } else {

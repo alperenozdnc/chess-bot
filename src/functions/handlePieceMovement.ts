@@ -228,6 +228,8 @@ export function handlePieceMovement() {
 
                     if (pieceid.toLowerCase() === "p") {
                         movesSincePawnAdvance = 0
+                    } else {
+                        movesSincePawnAdvance++;
                     }
 
                     if (isCastling) {

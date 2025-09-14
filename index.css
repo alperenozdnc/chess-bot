@@ -243,7 +243,7 @@ img:hover {
     height: 40px;
     border-radius: 50%;
     position: absolute;
-    z-index: 1;
+    z-index: 2;
 }
 
 #game-end-screen {
@@ -271,7 +271,7 @@ img:hover {
     z-index: 5000;
 }
 
-.move-highlight::before {
+.move-highlight::after {
     content: "";
     background: rgba(255, 253, 156, 0.7);
     display: block;

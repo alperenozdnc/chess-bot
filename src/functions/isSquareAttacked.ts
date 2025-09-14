@@ -1,12 +1,14 @@
 import { FILES } from "@constants";
 import { Pieces } from "@enums";
 import { SquareAndPiece } from "@interfaces";
-import { PieceColor } from "@types";
+import { Piece, PieceColor } from "@types";
 import { getSquareAndPieceFromPos } from "@utils";
 import { checkForObstacles } from "./checkLegality";
 
 interface Data {
     pos: string;
+    piece?: Piece;
+    attackerPos?: string;
     attackerColor: PieceColor;
 }
 
@@ -87,7 +89,7 @@ function generateRookDirections(pos: Position): string[][] {
 }
 
 export function isSquareAttacked(data: Data): boolean {
-    const { pos: attackedPos, attackerColor } = data;
+    const { pos: attackedPos, attackerColor, piece, attackerPos } = data;
     const squareData = getSquareAndPieceFromPos(attackedPos) as SquareAndPiece;
 
     if (!squareData) return false;
@@ -120,6 +122,16 @@ export function isSquareAttacked(data: Data): boolean {
 
             const deltaFile = Math.abs(attacked.file - attacker.file);
             const deltaRank = Math.abs(attacked.rank - attacker.rank);
+
+            if (piece && attackerPiece) {
+                if (piece !== attackerId) {
+                    continue;
+                }
+
+                if (attackerPosString !== attackerPos) {
+                    continue;
+                }
+            }
 
             if (attackerId === Pieces.King) {
                 if (deltaRank > 1 || deltaFile > 1) continue;

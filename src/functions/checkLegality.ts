@@ -58,7 +58,7 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
         isJustChecking,
     } = data;
 
-    let isMoveLegal = true;
+    let isMoveLegal = false;
 
     const posA = startSquare.dataset.pos!;
     const posB = destinationSquare.dataset.pos!;
@@ -96,54 +96,21 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
 
     switch (ID) {
         case Pieces.Pawn:
-            if (!isCapturing && fileA !== fileB) {
-                isMoveLegal = false;
-            }
-            if (isCapturing && fileA === fileB) {
-                isMoveLegal = false;
-            }
-            if (isCapturing && rankA === rankB) {
-                isMoveLegal = false;
-            }
-            if (isCapturing && dr > 1) {
-                isMoveLegal = false;
-            }
-            if (isCapturing && Math.abs(fileA - fileB) > 1) {
-                isMoveLegal = false;
-            }
-            if (color === "white" && rankA > rankB) {
-                isMoveLegal = false;
-            }
-            if (color === "black" && rankA < rankB) {
-                isMoveLegal = false;
-            }
-            if (dr > 2) {
-                isMoveLegal = false;
-            }
-            if (pieceMoveCount > 0 && dr > 1) {
-                isMoveLegal = false;
-            }
-            if (color === "white" && rankB === 8) {
-                isPromoting = true;
-            } else if (color === "black" && rankB === 1) {
-                isPromoting = true;
-            }
+            const direction = color === "white" ? 1 : -1;
+            const nextSquare = `${FILES[fileA]}${rankB - direction}`;
+            const nextSquareData = getSquareAndPieceFromPos(nextSquare) as SquareAndPiece;
+            let isDirectionRight = false;
 
-            if (dr === 2) {
-                const offset = color === "white" ? -1 : 1;
-
-                const data = getSquareAndPieceFromPos(`${FILES[fileA]}${rankB + offset}`) as SquareAndPiece;
-
-                if (data) {
-                    if (data.square) {
-                        if (data.piece) isMoveLegal = false;
-                    }
-                }
-            }
+            if (rankA < rankB && direction === 1) isDirectionRight = true;
+            if (rankA > rankB && direction === -1) isDirectionRight = true;
+            if (dr == 1 && df === 0 && isDirectionRight) isMoveLegal = true;
+            if (dr == 2 && df === 0 && pieceMoveCount === 0 && isDirectionRight && nextSquareData && nextSquareData.square.children.length === 0) isMoveLegal = true;
+            if (isCapturing) isMoveLegal = isSquareAttacked({ pos: posB, attackerColor: color, piece: Pieces.Pawn, attackerPos: posA });
+            if (color === "white" && rankB === 8) isPromoting = true;
+            if (color === "black" && rankB === 1) isPromoting = true;
 
             // wtf is this doing in check legality
             // this isnt the functions job
-
             if (isMoveLegal && isPromoting && !isJustChecking) {
                 // because the piece somehow keeps dragging when the modal pops up
                 resetDraggedPieceStyles(document.querySelector(".dragged")!);
@@ -212,163 +179,19 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
 
             break;
         case Pieces.Knight:
-            if (df < 1) {
-                isMoveLegal = false;
-            }
-            if (df > 2) {
-                isMoveLegal = false;
-            }
-            if (dr > 2) {
-                isMoveLegal = false;
-            }
-            if (dr < 1) {
-                isMoveLegal = false;
-            }
-            if (df === 1 && dr !== 2) {
-                isMoveLegal = false;
-            }
-            if (dr === 2 && df !== 1) {
-                isMoveLegal = false;
-            }
+            isMoveLegal = isSquareAttacked({ pos: posB, attackerColor: color, piece: Pieces.Knight, attackerPos: posA });
 
             break;
         case Pieces.Bishop:
-            if (df === 0) {
-                isMoveLegal = false;
-            }
-
-            if (dr === 0) {
-                isMoveLegal = false;
-            }
-
-            if (df !== dr) {
-                isMoveLegal = false;
-            }
-
-            let topLeftDir: string[] = [];
-            let bottomLeftDir: string[] = [];
-            let topRightDir: string[] = [];
-            let bottomRightDir: string[] = [];
-
-            let r = rankA + 1;
-            let r2 = rankA - 1;
-
-            let r3 = rankA + 1;
-            let r4 = rankA - 1;
-
-            for (let f = fileA - 1; f >= 0; f--) {
-                const fileString = FILES[f];
-
-                // file decrease, rank increase (move top left diagonally)
-                if (r <= 8) {
-                    topLeftDir.push(`${fileString}${r}`);
-                }
-
-                // file decrease, rank decrease (move bottom left diagonally)
-                if (r2 >= 1) {
-                    bottomLeftDir.push(`${fileString}${r2}`);
-                }
-
-                r++;
-                r2--;
-            }
-
-            for (let f = fileA + 1; f < 8; f++) {
-                const fileString = FILES[f];
-
-                // file increase, rank increase (move top right diagonally)
-                if (r3 <= 8) {
-                    topRightDir.push(`${fileString}${r3}`);
-                }
-
-                // file increase, rank decrease (move bottom right diagonally)
-                if (r4 >= 1) {
-                    bottomRightDir.push(`${fileString}${r4}`);
-                }
-
-                r3++;
-                r4--;
-            }
-
-            isMoveLegal = checkForObstacles(
-                [topLeftDir, topRightDir, bottomLeftDir, bottomRightDir],
-                posB,
-                color,
-            ) as boolean;
+            isMoveLegal = isSquareAttacked({ pos: posB, attackerColor: color, piece: Pieces.Bishop, attackerPos: posA });
 
             break;
         case Pieces.Rook:
-            if (df >= 1 && dr !== 0) {
-                isMoveLegal = false;
-            }
-
-            let up = [];
-            let left = [];
-            let right = [];
-            let down = [];
-
-            for (let f = 0; f <= 7; f++) {
-                const fileString = FILES[f];
-
-                if (f === fileA) {
-                    continue;
-                }
-
-                if (f < fileA) {
-                    left.push(`${fileString}${rankA}`);
-                } else {
-                    right.push(`${fileString}${rankA}`);
-                }
-            }
-
-            for (let r = 1; r <= 8; r++) {
-                const fileString = FILES[fileA];
-
-                if (r === rankA) {
-                    continue;
-                }
-
-                if (r < rankA) {
-                    down.push(`${fileString}${r}`);
-                } else {
-                    up.push(`${fileString}${r}`);
-                }
-            }
-
-            left = left.reverse();
-            down = down.reverse();
-
-            isMoveLegal = checkForObstacles(
-                [up, down, left, right],
-                posB,
-                color,
-            ) as boolean;
+            isMoveLegal = isSquareAttacked({ pos: posB, attackerColor: color, piece: Pieces.Rook, attackerPos: posA });
 
             break;
         case Pieces.Queen:
-            const { isMoveLegal: actsAsABishop } = await checkLegality({
-                ID: Pieces.Bishop,
-                color,
-                pieceMoveCount,
-                startSquare,
-                destinationSquare,
-                moveIdx: moveIdx,
-                isJustChecking,
-                pieceElement
-            });
-
-            const { isMoveLegal: actsAsARook } = await checkLegality({
-                ID: Pieces.Rook,
-                color,
-                pieceMoveCount,
-                startSquare,
-                destinationSquare,
-                isJustChecking,
-                moveIdx,
-                pieceElement
-            });
-
-            if (!actsAsABishop && !actsAsARook) isMoveLegal = false;
+            isMoveLegal = isSquareAttacked({ pos: posB, attackerColor: color, piece: Pieces.Queen, attackerPos: posA });
 
             break;
         case Pieces.King:
@@ -421,9 +244,7 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
                     isMoveLegal = false;
                 }
             } else {
-                if (df > 1 || dr > 1) {
-                    isMoveLegal = false;
-                }
+                isMoveLegal = isSquareAttacked({ pos: posB, attackerColor: color, piece: Pieces.King, attackerPos: posA });
             }
 
             break;
@@ -439,17 +260,21 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
     const destinationElement = destinationSquare.firstChild!;
 
     pieceElement.remove();
-    if (isCapturing && !isEnPassant) destinationSquare.innerHTML = "";
+    if (isCapturing && !isEnPassant && isPromoting) destinationSquare.innerHTML = "";
     destinationSquare.appendChild(pieceElement);
 
     const isChecking = isSquareAttacked({ pos: enemyKingPos as string, attackerColor: color });
     isCheck = isSquareAttacked({ pos: ID === Pieces.King ? posB : kingPos, attackerColor: color === "white" ? "black" : "white" });
 
     pieceElement.remove();
-    if (isCapturing && !isEnPassant) destinationSquare.appendChild(destinationElement);
+    if (isCapturing && !isEnPassant && isPromoting) destinationSquare.appendChild(destinationElement);
     startSquare.appendChild(pieceElement);
 
     if (isCheck) isMoveLegal = false;
+
+    if (isPromoting && !isJustChecking && isMoveLegal) {
+        startSquare.innerHTML = "";
+    }
 
     return {
         isMoveLegal,
@@ -461,3 +286,4 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
         enPassantablePawn,
     };
 }
+

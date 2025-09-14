@@ -132,6 +132,47 @@ img:hover {
     position: absolute;
 }
 
+.content-wrapper {
+    z-index: 9999;
+    position: absolute;
+    padding: 1.5rem;
+    padding-inline: 2rem;
+    font-family: monospace;
+    text-align: center;
+    background: #1f1f1f;
+    border-radius: 2em;
+}
+
+.content-wrapper h1 {
+    color: white;
+    font-size: 100px;
+}
+
+.content-wrapper h2 {
+    color: white;
+    font-size: 20px;
+}
+
+#ok-button {
+    width: 100%;
+    margin-top: 5rem;
+    padding: 1rem;
+    border-radius: 2em;
+    outline: none;
+    border: none;
+    font-family: monospace;
+    font-size: 15px;
+}
+
+#ok-button:hover {
+    cursor: pointer;
+    font-weight: bold;
+}
+
+#ok-button:hover::after {
+    content: " ->";
+}
+
 #promotion-screen-background {
     position: absolute;
     width: 100vw;
@@ -177,4 +218,29 @@ img:hover {
     border-radius: 50%;
     position: absolute;
     z-index: 1;
+}
+
+#game-end-screen {
+    position: absolute;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+    background: transparent;
+}
+
+.game-end-screen-visible {
+    display: flex;
+}
+
+#game-end-screen-background {
+    position: absolute;
+    max-width: 100vw;
+    max-height: 100vh;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    right: 0;
+    background: rgba(0, 0, 0, 0.3);
+    z-index: 5000;
 }

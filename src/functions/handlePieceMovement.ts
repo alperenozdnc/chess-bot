@@ -200,11 +200,18 @@ export function handlePieceMovement() {
 
                     if (isChecking) {
                         const isCheckmate = await checkForCheckmate(moveIdx + 1, pieceColor === "white" ? "black" : "white");
-
                         if (isCheckmate) {
                             MATE_SOUND.play();
+                            const gameEndScreen = document.getElementById("game-end-screen")!;
+                            const okButton = document.getElementById("ok-button")!;
 
-                            window.alert(`checkmate! ${pieceColor} wins.`);
+                            gameEndScreen.classList.add("game-end-screen-visible");
+                            gameEndScreen.querySelector("h2")!.innerText = `${pieceColor} wins by checkmate`;
+
+                            okButton.addEventListener("click", () => {
+                                gameEndScreen.classList.remove("game-end-screen-visible");
+                                (document.getElementById("reset-button") as HTMLButtonElement)!.click();
+                            });
                         }
                     }
                 } else {

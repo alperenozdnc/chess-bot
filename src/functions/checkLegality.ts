@@ -260,14 +260,14 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
     const destinationElement = destinationSquare.firstChild!;
 
     pieceElement.remove();
-    if (isCapturing && !isEnPassant && isPromoting) destinationSquare.innerHTML = "";
+    if (isCapturing && !isEnPassant) destinationSquare.innerHTML = "";
     destinationSquare.appendChild(pieceElement);
 
     const isChecking = isSquareAttacked({ pos: enemyKingPos as string, attackerColor: color });
     isCheck = isSquareAttacked({ pos: ID === Pieces.King ? posB : kingPos, attackerColor: color === "white" ? "black" : "white" });
 
     pieceElement.remove();
-    if (isCapturing && !isEnPassant && isPromoting) destinationSquare.appendChild(destinationElement);
+    if (isCapturing && !isEnPassant) destinationSquare.appendChild(destinationElement);
     startSquare.appendChild(pieceElement);
 
     if (isCheck) isMoveLegal = false;

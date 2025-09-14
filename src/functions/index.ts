@@ -6,3 +6,4 @@ export { handlePieceMovement } from "./handlePieceMovement";
 export { listLegalMoves } from "./listLegalMoves";
 export { isSquareAttacked } from "./isSquareAttacked";
 export { checkForCheckmate } from "./checkForCheckmate";
+export { getFEN } from "./getFEN";

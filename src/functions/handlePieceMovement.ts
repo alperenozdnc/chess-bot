@@ -209,21 +209,32 @@ export function handlePieceMovement() {
                         enPassantablePawn.remove();
                     }
 
-                    if (isChecking) {
-                        const isCheckmate = await checkForCheckmate(moveIdx + 1, pieceColor === "white" ? "black" : "white");
-                        if (isCheckmate) {
-                            MATE_SOUND.play();
-                            const gameEndScreen = document.getElementById("game-end-screen")!;
-                            const okButton = document.getElementById("ok-button")!;
+                    const noLegalMovesLeft = await checkForCheckmate(moveIdx + 1, pieceColor === "white" ? "black" : "white");
 
-                            gameEndScreen.classList.add("game-end-screen-visible");
-                            gameEndScreen.querySelector("h2")!.innerText = `${pieceColor} wins by checkmate`;
+                    if (isChecking && noLegalMovesLeft) {
+                        MATE_SOUND.play();
+                        const gameEndScreen = document.getElementById("game-end-screen")!;
+                        const okButton = document.getElementById("ok-button")!;
 
-                            okButton.addEventListener("click", () => {
-                                gameEndScreen.classList.remove("game-end-screen-visible");
-                                (document.getElementById("reset-button") as HTMLButtonElement)!.click();
-                            });
-                        }
+                        gameEndScreen.classList.add("game-end-screen-visible");
+                        gameEndScreen.querySelector("h2")!.innerText = `${pieceColor} wins by checkmate`;
+
+                        okButton.addEventListener("click", () => {
+                            gameEndScreen.classList.remove("game-end-screen-visible");
+                            (document.getElementById("reset-button") as HTMLButtonElement)!.click();
+                        });
+                    } else if (noLegalMovesLeft) {
+                        MATE_SOUND.play();
+                        const gameEndScreen = document.getElementById("game-end-screen")!;
+                        const okButton = document.getElementById("ok-button")!;
+
+                        gameEndScreen.classList.add("game-end-screen-visible");
+                        gameEndScreen.querySelector("h2")!.innerText = `draw by stalemate`;
+
+                        okButton.addEventListener("click", () => {
+                            gameEndScreen.classList.remove("game-end-screen-visible");
+                            (document.getElementById("reset-button") as HTMLButtonElement)!.click();
+                        });
                     }
                 } else {
                     undoMove(originalSquare, draggedPiece);

@@ -210,6 +210,32 @@ img:hover {
     z-index: 1;
 }
 
+.capturable-highlight.move-highlight::before {
+    content: "";
+
+    background: none;
+    border: 8px solid rgba(0, 0, 0, 0.3);
+
+    width: calc(100vh / 8);
+    height: calc(100vh / 8);
+
+    border-radius: 50%;
+    position: absolute;
+    z-index: 2;
+}
+
+.capturable-highlight.move-highlight::after {
+    content: "";
+
+    background: rgba(255, 253, 156, 0.7);
+
+    width: calc(100vh / 8);
+    height: calc(100vh / 8);
+
+    position: absolute;
+    z-index: 1;
+}
+
 .highlight::before {
     content: "";
     background: rgba(0, 0, 0, 0.3);

@@ -12,6 +12,35 @@ function moveAt(draggedPiece: HTMLDivElement | null, offsetX: number, offsetY: n
     }
 }
 
+async function highlightMoves(moveIdx: number, pieceColor: PieceColor, piece: HTMLImageElement, originalSquare: HTMLDivElement) {
+    let pieceCanMove = checkTurn(moveIdx, pieceColor);
+    let highlightedSquares = [];
+
+    if (pieceCanMove) {
+        const legalMoves = await listLegalMoves({
+            piece: piece.dataset.pieceid! as Piece,
+            startSquare: originalSquare,
+            color: piece.dataset.color! as unknown as PieceColor,
+            pieceElement: piece,
+            pieceMoveCount: +piece.dataset
+                .move_count! as unknown as number,
+            moveIdx: moveIdx,
+        });
+
+        for (const legalMove of legalMoves) {
+            highlightedSquares.push(legalMove.square);
+
+            if (legalMove.isCapturing) {
+                legalMove.square.classList.add("capturable-highlight");
+            } else {
+                legalMove.square.classList.add("highlight");
+            }
+        }
+    }
+
+    return highlightedSquares;
+}
+
 export function handlePieceMovement() {
     let FENPositions: string[] = [INITIAL_POSITION];
 
@@ -47,34 +76,11 @@ export function handlePieceMovement() {
             offsetY = e.clientY - rect.top;
 
             draggedPiece.classList.add("dragged");
-
             document.body.appendChild(draggedPiece);
             moveAt(draggedPiece, offsetX, offsetY, e.pageX, e.pageY);
 
             const pieceColor = draggedPiece.dataset.color as PieceColor;
-            let pieceCanMove = checkTurn(moveIdx, pieceColor);
-
-            if (pieceCanMove) {
-                const legalMoves = await listLegalMoves({
-                    piece: draggedPiece.dataset.pieceid! as Piece,
-                    startSquare: originalSquare,
-                    color: draggedPiece.dataset.color! as unknown as PieceColor,
-                    pieceElement: draggedPiece,
-                    pieceMoveCount: +draggedPiece.dataset
-                        .move_count! as unknown as number,
-                    moveIdx: moveIdx,
-                });
-
-                for (const legalMove of legalMoves) {
-                    highlightedSquares.push(legalMove.square);
-
-                    if (legalMove.isCapturing) {
-                        legalMove.square.classList.add("capturable-highlight");
-                    } else {
-                        legalMove.square.classList.add("highlight");
-                    }
-                }
-            }
+            highlightedSquares = await highlightMoves(moveIdx, pieceColor, draggedPiece, originalSquare);
         }
 
         document.addEventListener("mousemove", onMouseMove);

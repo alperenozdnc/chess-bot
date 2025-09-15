@@ -5,6 +5,11 @@ import { checkForCheckmate, checkLegality, drawBoardfromFEN, getFEN, getPromotio
 import { CastlingMap } from "@maps";
 import { SquareAndPiece } from "@interfaces";
 
+interface GameData {
+    isGameOver: boolean;
+    FENPositions: string[];
+}
+
 function undoMove(originalSquare: HTMLDivElement, piece: HTMLImageElement) {
     originalSquare.appendChild(piece);
 }
@@ -35,6 +40,47 @@ function handleEnd(reason: GameEndReason, winner?: PieceColor, drawReason?: Draw
         gameEndScreen.classList.remove("game-end-screen-visible");
         (document.getElementById("reset-button") as HTMLButtonElement)!.click();
     });
+}
+
+async function checkIfGameIsOver(
+    moveIdx: number,
+    pieceColor: PieceColor,
+    isChecking: boolean,
+    FENPositions: string[],
+    movesSincePawnAdvance: number,
+    movesSinceCapture: number
+): Promise<GameData> {
+    let isGameOver = false;
+    let threefoldRepetition = false;
+
+    FENPositions.forEach(posA => {
+        const freq = FENPositions.filter(posB => posA === posB).length;
+
+        if (freq === 3) threefoldRepetition = true;
+    });
+
+    const noLegalMovesLeft = await checkForCheckmate(moveIdx + 1, pieceColor === "white" ? "black" : "white");
+
+    if (isChecking && noLegalMovesLeft) {
+        isGameOver = true;
+        handleEnd("checkmate", pieceColor);
+    } else if (noLegalMovesLeft) {
+        isGameOver = true;
+        handleEnd("draw", pieceColor, "stalemate");
+    } else if (threefoldRepetition) {
+        isGameOver = true;
+        handleEnd("draw", pieceColor, "repetition");
+    } else if (movesSincePawnAdvance >= 100 && movesSinceCapture >= 100) {
+        isGameOver = true;
+        handleEnd("draw", pieceColor, "50 move rule");
+    }
+
+    if (isGameOver) FENPositions = [INITIAL_POSITION];
+
+    return {
+        isGameOver,
+        FENPositions
+    }
 }
 
 export function handlePieceMovement() {
@@ -255,34 +301,18 @@ export function handlePieceMovement() {
                         enPassantablePawn.remove();
                     }
 
-                    const FEN = getFEN();
-                    FENPositions.push(FEN);
+                    FENPositions.push(getFEN());
 
-                    let threefoldRepetition = false;
+                    const { isGameOver, FENPositions: positions } = await checkIfGameIsOver(
+                        moveIdx,
+                        pieceColor,
+                        isChecking,
+                        FENPositions,
+                        movesSincePawnAdvance,
+                        movesSinceCapture
+                    );
 
-                    FENPositions.forEach(posA => {
-                        const freq = FENPositions.filter(posB => posA === posB).length;
-
-                        if (freq === 3) threefoldRepetition = true;
-                    });
-
-                    const noLegalMovesLeft = await checkForCheckmate(moveIdx + 1, pieceColor === "white" ? "black" : "white");
-
-                    if (isChecking && noLegalMovesLeft) {
-                        handleEnd("checkmate", pieceColor);
-                        FENPositions = [INITIAL_POSITION];
-                    } else if (noLegalMovesLeft) {
-                        handleEnd("draw", pieceColor, "stalemate");
-                        FENPositions = [INITIAL_POSITION];
-                    } else if (threefoldRepetition) {
-                        handleEnd("draw", pieceColor, "repetition");
-                        FENPositions = [INITIAL_POSITION];
-                    }
-
-                    if (movesSincePawnAdvance >= 100 && movesSinceCapture >= 100) {
-                        handleEnd("draw", pieceColor, "50 move rule");
-                        FENPositions = [INITIAL_POSITION];
-                    }
+                    if (isGameOver) FENPositions = positions;
                 } else {
                     undoMove(originalSquare, draggedPiece);
                 }

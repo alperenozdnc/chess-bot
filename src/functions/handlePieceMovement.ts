@@ -56,6 +56,20 @@ function clearHighlights(highlightedSquares: HTMLDivElement[]) {
     return highlightedSquares;
 }
 
+function handleAudio(isCapturing: boolean, isChecking: boolean) {
+    if (isCapturing) {
+        if (!isChecking) {
+            CAPTURE_SOUND.play();
+        } else {
+            CHECK_SOUND.play();
+        }
+    } else if (isChecking) {
+        CHECK_SOUND.play();
+    } else {
+        MOVE_SOUND.play();
+    }
+}
+
 export function handlePieceMovement() {
     let FENPositions: string[] = [INITIAL_POSITION];
 
@@ -119,6 +133,7 @@ export function handlePieceMovement() {
                 clearHighlights(highlightedSquares);
 
                 if (!target) return;
+
                 if (!target.classList.contains("square")) {
                     originalSquare.appendChild(draggedPiece);
                     resetDraggedPieceStyles(draggedPiece);
@@ -191,21 +206,13 @@ export function handlePieceMovement() {
                     originalSquare.classList.add("move-highlight");
                     target.classList.add("move-highlight");
 
+                    handleAudio(isCapturing, isChecking);
+
                     if (isCapturing) {
                         movesSinceCapture = 0;
-
-                        if (!isChecking) {
-                            CAPTURE_SOUND.play();
-                        } else {
-                            CHECK_SOUND.play();
-                        }
-                    } else if (isChecking) {
-                        CHECK_SOUND.play();
                     } else {
-                        MOVE_SOUND.play();
+                        movesSinceCapture += 1;
                     }
-
-                    if (!isCapturing) movesSinceCapture += 1;
 
                     if (pieceid.toLowerCase() === "p") {
                         movesSincePawnAdvance = 0

@@ -26,6 +26,7 @@ export function handlePieceMovement() {
     resetButton!.addEventListener("click", () => {
         moveIdx = 0;
         drawBoardfromFEN(INITIAL_POSITION);
+        FENPositions = [INITIAL_POSITION];
     });
 
     document.addEventListener("mousedown", async (e) => {

@@ -5,6 +5,13 @@ import { checkIfGameOver, checkLegality, drawBoardfromFEN, getFEN, getPromotionS
 import { CastlingMap } from "@maps";
 import { SquareAndPiece } from "@interfaces";
 
+function moveAt(draggedPiece: HTMLDivElement | null, offsetX: number, offsetY: number, pageX: number, pageY: number) {
+    if (draggedPiece) {
+        draggedPiece.style.left = `${pageX - offsetX}px`;
+        draggedPiece.style.top = `${pageY - offsetY}px`;
+    }
+}
+
 export function handlePieceMovement() {
     let FENPositions: string[] = [INITIAL_POSITION];
 
@@ -42,7 +49,7 @@ export function handlePieceMovement() {
             draggedPiece.classList.add("dragged");
 
             document.body.appendChild(draggedPiece);
-            moveAt(e.pageX, e.pageY);
+            moveAt(draggedPiece, offsetX, offsetY, e.pageX, e.pageY);
 
             const pieceColor = draggedPiece.dataset.color as PieceColor;
             let pieceCanMove = checkTurn(moveIdx, pieceColor);
@@ -70,17 +77,10 @@ export function handlePieceMovement() {
             }
         }
 
-        function moveAt(pageX: number, pageY: number) {
-            if (draggedPiece) {
-                draggedPiece.style.left = `${pageX - offsetX}px`;
-                draggedPiece.style.top = `${pageY - offsetY}px`;
-            }
-        }
-
         document.addEventListener("mousemove", onMouseMove);
 
         function onMouseMove(e: MouseEvent) {
-            moveAt(e.pageX, e.pageY);
+            moveAt(draggedPiece, offsetX, offsetY, e.pageX, e.pageY);
         }
 
         document.addEventListener("mouseup", async function onMouseUp(e) {

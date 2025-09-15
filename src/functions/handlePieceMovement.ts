@@ -41,6 +41,19 @@ async function highlightMoves(moveIdx: number, pieceColor: PieceColor, piece: HT
     return highlightedSquares;
 }
 
+function isTargetWrong(target: Element, originalSquare: HTMLDivElement, piece: HTMLImageElement) {
+    let result = false;
+
+    if (!target.classList.contains("square")) {
+        originalSquare.appendChild(piece);
+        resetDraggedPieceStyles(piece);
+
+        result = true;
+    } else if (!target) result = true;
+
+    return result;
+}
+
 function clearHighlights(highlightedSquares: HTMLDivElement[]) {
     if (highlightedSquares.length > 0) {
         for (const square of highlightedSquares) {
@@ -151,13 +164,7 @@ export function handlePieceMovement() {
 
                 clearHighlights(highlightedSquares);
 
-                if (!target) return;
-
-                if (!target.classList.contains("square")) {
-                    originalSquare.appendChild(draggedPiece);
-                    resetDraggedPieceStyles(draggedPiece);
-                    return;
-                }
+                if (isTargetWrong(target, originalSquare, draggedPiece)) return;
 
                 if (!pieceCanMove) {
                     undoMove(originalSquare, draggedPiece);
@@ -231,8 +238,6 @@ export function handlePieceMovement() {
 
                     movesSinceCapture = newMovesSinceCapture;
                     movesSincePawnAdvance = newMovesSincePawnAdvance;
-
-                    console.log(movesSinceCapture, movesSincePawnAdvance);
 
                     if (isCastling) {
                         const castlingSquares = CastlingMap.get(pos!)!;

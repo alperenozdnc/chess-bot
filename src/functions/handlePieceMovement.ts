@@ -41,6 +41,21 @@ async function highlightMoves(moveIdx: number, pieceColor: PieceColor, piece: HT
     return highlightedSquares;
 }
 
+function clearHighlights(highlightedSquares: HTMLDivElement[]) {
+    if (highlightedSquares.length > 0) {
+        for (const square of highlightedSquares) {
+            square.classList.remove(
+                "highlight",
+                "capturable-highlight",
+            );
+        }
+
+        highlightedSquares = [];
+    }
+
+    return highlightedSquares;
+}
+
 export function handlePieceMovement() {
     let FENPositions: string[] = [INITIAL_POSITION];
 
@@ -101,16 +116,7 @@ export function handlePieceMovement() {
                         : target
                 )!;
 
-                if (highlightedSquares.length > 0) {
-                    for (const square of highlightedSquares) {
-                        square.classList.remove(
-                            "highlight",
-                            "capturable-highlight",
-                        );
-                    }
-
-                    highlightedSquares = [];
-                }
+                clearHighlights(highlightedSquares);
 
                 if (!target) return;
                 if (!target.classList.contains("square")) {

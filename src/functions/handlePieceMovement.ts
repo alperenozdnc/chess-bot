@@ -70,6 +70,25 @@ function handleAudio(isCapturing: boolean, isChecking: boolean) {
     }
 }
 
+function mutateDrawCounters(movesSinceCapture: number, movesSincePawnAdvance: number, isCapturing: boolean, pieceid: string) {
+    let newMovesSinceCapture = movesSinceCapture;
+    let newMovesSincePawnAdvance = movesSincePawnAdvance;
+
+    if (isCapturing) {
+        newMovesSinceCapture = 0;
+    } else {
+        newMovesSinceCapture += 1;
+    }
+
+    if (pieceid.toLowerCase() === "p") {
+        newMovesSincePawnAdvance = 0
+    } else {
+        newMovesSincePawnAdvance++;
+    }
+
+    return { newMovesSincePawnAdvance, newMovesSinceCapture };
+}
+
 export function handlePieceMovement() {
     let FENPositions: string[] = [INITIAL_POSITION];
 
@@ -208,17 +227,12 @@ export function handlePieceMovement() {
 
                     handleAudio(isCapturing, isChecking);
 
-                    if (isCapturing) {
-                        movesSinceCapture = 0;
-                    } else {
-                        movesSinceCapture += 1;
-                    }
+                    const { newMovesSinceCapture, newMovesSincePawnAdvance } = mutateDrawCounters(movesSinceCapture, movesSincePawnAdvance, isCapturing, pieceid);
 
-                    if (pieceid.toLowerCase() === "p") {
-                        movesSincePawnAdvance = 0
-                    } else {
-                        movesSincePawnAdvance++;
-                    }
+                    movesSinceCapture = newMovesSinceCapture;
+                    movesSincePawnAdvance = newMovesSincePawnAdvance;
+
+                    console.log(movesSinceCapture, movesSincePawnAdvance);
 
                     if (isCastling) {
                         const castlingSquares = CastlingMap.get(pos!)!;

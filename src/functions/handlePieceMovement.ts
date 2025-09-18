@@ -1,18 +1,47 @@
-import { CAPTURE_SOUND, CHECK_SOUND, INITIAL_POSITION, MOVE_SOUND } from "@constants";
+import {
+    CAPTURE_SOUND,
+    CHECK_SOUND,
+    INITIAL_POSITION,
+    MOVE_SOUND,
+} from "@constants";
 import { Piece, PieceColor } from "@types";
-import { checkTurn, createPiece, getSquareAndPieceFromPos, resetDraggedPieceStyles, undoMove } from "@utils";
-import { checkIfGameOver, checkLegality, drawBoardfromFEN, getFEN, getPromotionSelection, listLegalMoves } from "@functions";
+import {
+    checkTurn,
+    createPiece,
+    getSquareAndPieceFromPos,
+    resetDraggedPieceStyles,
+    undoMove,
+} from "@utils";
+import {
+    checkIfGameOver,
+    checkLegality,
+    drawBoardfromFEN,
+    getFEN,
+    getPromotionSelection,
+    listLegalMoves,
+} from "@functions";
 import { CastlingMap } from "@maps";
 import { SquareAndPiece } from "@interfaces";
 
-function moveAt(draggedPiece: HTMLDivElement | null, offsetX: number, offsetY: number, pageX: number, pageY: number) {
+function moveAt(
+    draggedPiece: HTMLDivElement | null,
+    offsetX: number,
+    offsetY: number,
+    pageX: number,
+    pageY: number,
+) {
     if (draggedPiece) {
         draggedPiece.style.left = `${pageX - offsetX}px`;
         draggedPiece.style.top = `${pageY - offsetY}px`;
     }
 }
 
-async function highlightMoves(moveIdx: number, pieceColor: PieceColor, piece: HTMLImageElement, originalSquare: HTMLDivElement) {
+async function highlightMoves(
+    moveIdx: number,
+    pieceColor: PieceColor,
+    piece: HTMLImageElement,
+    originalSquare: HTMLDivElement,
+) {
     let pieceCanMove = checkTurn(moveIdx, pieceColor);
     let highlightedSquares = [];
 
@@ -22,8 +51,7 @@ async function highlightMoves(moveIdx: number, pieceColor: PieceColor, piece: HT
             startSquare: originalSquare,
             color: piece.dataset.color! as unknown as PieceColor,
             pieceElement: piece,
-            pieceMoveCount: +piece.dataset
-                .move_count! as unknown as number,
+            pieceMoveCount: +piece.dataset.move_count! as unknown as number,
             moveIdx: moveIdx,
         });
 
@@ -41,7 +69,11 @@ async function highlightMoves(moveIdx: number, pieceColor: PieceColor, piece: HT
     return highlightedSquares;
 }
 
-function isTargetWrong(target: Element, originalSquare: HTMLDivElement, piece: HTMLImageElement) {
+function isTargetWrong(
+    target: Element,
+    originalSquare: HTMLDivElement,
+    piece: HTMLImageElement,
+) {
     let result = false;
 
     if (!target.classList.contains("square")) {
@@ -57,10 +89,7 @@ function isTargetWrong(target: Element, originalSquare: HTMLDivElement, piece: H
 function clearHighlights(highlightedSquares: HTMLDivElement[]) {
     if (highlightedSquares.length > 0) {
         for (const square of highlightedSquares) {
-            square.classList.remove(
-                "highlight",
-                "capturable-highlight",
-            );
+            square.classList.remove("highlight", "capturable-highlight");
         }
 
         highlightedSquares = [];
@@ -83,7 +112,12 @@ function handleAudio(isCapturing: boolean, isChecking: boolean) {
     }
 }
 
-function mutateDrawCounters(movesSinceCapture: number, movesSincePawnAdvance: number, isCapturing: boolean, pieceid: string) {
+function mutateDrawCounters(
+    movesSinceCapture: number,
+    movesSincePawnAdvance: number,
+    isCapturing: boolean,
+    pieceid: string,
+) {
     let newMovesSinceCapture = movesSinceCapture;
     let newMovesSincePawnAdvance = movesSincePawnAdvance;
 
@@ -94,7 +128,7 @@ function mutateDrawCounters(movesSinceCapture: number, movesSincePawnAdvance: nu
     }
 
     if (pieceid.toLowerCase() === "p") {
-        newMovesSincePawnAdvance = 0
+        newMovesSincePawnAdvance = 0;
     } else {
         newMovesSincePawnAdvance++;
     }
@@ -141,7 +175,12 @@ export function handlePieceMovement() {
             moveAt(draggedPiece, offsetX, offsetY, e.pageX, e.pageY);
 
             const pieceColor = draggedPiece.dataset.color as PieceColor;
-            highlightedSquares = await highlightMoves(moveIdx, pieceColor, draggedPiece, originalSquare);
+            highlightedSquares = await highlightMoves(
+                moveIdx,
+                pieceColor,
+                draggedPiece,
+                originalSquare,
+            );
         }
 
         document.addEventListener("mousemove", onMouseMove);
@@ -201,9 +240,6 @@ export function handlePieceMovement() {
                 ) {
                     let pos = (target as HTMLDivElement).dataset.pos;
 
-                    let notation = pos;
-                    if (pieceid !== "P") notation = `${pieceid}${notation}`;
-
                     (draggedPiece.dataset.move_count as unknown as number) =
                         +(draggedPiece.dataset.move_count ?? 0) + 1;
 
@@ -213,7 +249,9 @@ export function handlePieceMovement() {
                         target.innerHTML = "";
                         target.appendChild(draggedPiece);
                     } else {
-                        resetDraggedPieceStyles(document.querySelector(".dragged")!);
+                        resetDraggedPieceStyles(
+                            document.querySelector(".dragged")!,
+                        );
 
                         const selection = (await getPromotionSelection(
                             pieceColor,
@@ -223,18 +261,31 @@ export function handlePieceMovement() {
                         originalSquare.innerHTML = "";
 
                         createPiece({
-                            id: pieceColor === "white" ? selection.toUpperCase() : selection,
+                            id:
+                                pieceColor === "white"
+                                    ? selection.toUpperCase()
+                                    : selection,
                             pos: (target as HTMLDivElement).dataset.pos!,
                         });
                     }
 
-                    document.querySelectorAll(".move-highlight").forEach(element => element.classList.remove("move-highlight"));
+                    document
+                        .querySelectorAll(".move-highlight")
+                        .forEach((element) =>
+                            element.classList.remove("move-highlight"),
+                        );
                     originalSquare.classList.add("move-highlight");
                     target.classList.add("move-highlight");
 
                     handleAudio(isCapturing, isChecking);
 
-                    const { newMovesSinceCapture, newMovesSincePawnAdvance } = mutateDrawCounters(movesSinceCapture, movesSincePawnAdvance, isCapturing, pieceid);
+                    const { newMovesSinceCapture, newMovesSincePawnAdvance } =
+                        mutateDrawCounters(
+                            movesSinceCapture,
+                            movesSincePawnAdvance,
+                            isCapturing,
+                            pieceid,
+                        );
 
                     movesSinceCapture = newMovesSinceCapture;
                     movesSincePawnAdvance = newMovesSincePawnAdvance;
@@ -264,14 +315,15 @@ export function handlePieceMovement() {
 
                     FENPositions.push(getFEN());
 
-                    const { isGameOver, FENPositions: positions } = await checkIfGameOver(
-                        moveIdx,
-                        pieceColor,
-                        isChecking,
-                        FENPositions,
-                        movesSincePawnAdvance,
-                        movesSinceCapture
-                    );
+                    const { isGameOver, FENPositions: positions } =
+                        await checkIfGameOver(
+                            moveIdx,
+                            pieceColor,
+                            isChecking,
+                            FENPositions,
+                            movesSincePawnAdvance,
+                            movesSinceCapture,
+                        );
 
                     if (isGameOver) FENPositions = positions;
                 } else {
@@ -287,5 +339,4 @@ export function handlePieceMovement() {
             draggedPiece = null;
         });
     });
-
 }

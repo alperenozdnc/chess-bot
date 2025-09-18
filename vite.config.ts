@@ -16,14 +16,13 @@ export default defineConfig({
             "@functions": resolve(__dirname, "src/functions"),
             "@utils": resolve(__dirname, "src/utils"),
             "@maps": resolve(__dirname, "src/maps"),
-        }
+        },
     },
     server: {
         open: true, // automatically opens browser
     },
     build: {
         outDir: "dist",
-        sourcemap: true
-    }
+        sourcemap: true,
+    },
 });
-

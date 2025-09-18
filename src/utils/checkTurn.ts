@@ -9,4 +9,3 @@ export function checkTurn(moveIdx: number, color: PieceColor) {
 
     return false;
 }
-

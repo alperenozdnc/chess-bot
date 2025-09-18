@@ -1,29 +1,28 @@
 {
-  "compilerOptions": {
-    "target": "esnext",
-    "module": "esnext",
-    "moduleResolution": "node",
-    "strict": true,
-    "esModuleInterop": true,
-    "lib": ["esnext", "dom"],
-    "baseUrl": "./src",
-    "paths": {
-      "@constants": ["./constants/index.ts"],
-      "@enums": ["./enums/index.ts"],
-      "@types": ["./types/index.ts"],
-      "@interfaces": ["./interfaces/index.ts"],
-      "@functions": ["./functions/index.ts"],
-      "@utils": ["./utils/index.ts"],
-      "@maps": ["./maps/index.ts"],
-      "@constants/*": ["./constants/*"],
-      "@enums/*": ["./enums/*"],
-      "@types/*": ["./types/*"],
-      "@interfaces/*": ["./interfaces/*"],
-      "@functions/*": ["./functions/*"],
-      "@utils/*": ["./utils/*"],
-      "@maps/*": ["./utils/*"]
-    }
-  },
-  "include": ["src"]
+    "compilerOptions": {
+        "target": "esnext",
+        "module": "esnext",
+        "moduleResolution": "node",
+        "strict": true,
+        "esModuleInterop": true,
+        "lib": ["esnext", "dom"],
+        "baseUrl": "./src",
+        "paths": {
+            "@constants": ["./constants/index.ts"],
+            "@enums": ["./enums/index.ts"],
+            "@types": ["./types/index.ts"],
+            "@interfaces": ["./interfaces/index.ts"],
+            "@functions": ["./functions/index.ts"],
+            "@utils": ["./utils/index.ts"],
+            "@maps": ["./maps/index.ts"],
+            "@constants/*": ["./constants/*"],
+            "@enums/*": ["./enums/*"],
+            "@types/*": ["./types/*"],
+            "@interfaces/*": ["./interfaces/*"],
+            "@functions/*": ["./functions/*"],
+            "@utils/*": ["./utils/*"],
+            "@maps/*": ["./utils/*"]
+        }
+    },
+    "include": ["src"]
 }
-

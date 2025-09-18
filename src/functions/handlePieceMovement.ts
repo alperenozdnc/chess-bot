@@ -76,7 +76,7 @@ function isTargetWrong(
 ) {
     let result = false;
 
-    if (!target.classList.contains("square")) {
+    if (!target.classList.contains("square") || target === originalSquare) {
         originalSquare.appendChild(piece);
         resetDraggedPieceStyles(piece);
 
@@ -190,152 +190,144 @@ export function handlePieceMovement() {
         }
 
         document.addEventListener("mouseup", async function onMouseUp(e) {
-            if (draggedPiece) {
-                const pieceColor = draggedPiece.dataset.color as PieceColor;
+            if (!draggedPiece) return;
 
-                let pieceCanMove = checkTurn(moveIdx, pieceColor);
-                let target = document.elementFromPoint(e.clientX, e.clientY)!;
-                target = (
-                    target.classList.contains("piece")
-                        ? target.parentElement
-                        : target
-                )!;
+            const pieceColor = draggedPiece.dataset.color as PieceColor;
+            let pieceCanMove = checkTurn(moveIdx, pieceColor);
+            let target = document.elementFromPoint(e.clientX, e.clientY)!;
+            target = (
+                target.classList.contains("piece")
+                    ? target.parentElement
+                    : target
+            )!;
 
-                clearHighlights(highlightedSquares);
+            clearHighlights(highlightedSquares);
 
-                if (isTargetWrong(target, originalSquare, draggedPiece)) return;
+            if (isTargetWrong(target, originalSquare, draggedPiece)) return;
 
-                if (!pieceCanMove) {
-                    undoMove(originalSquare, draggedPiece);
-                    resetDraggedPieceStyles(draggedPiece);
-                    return;
-                }
-
-                let pieceid = draggedPiece.dataset.pieceid!.toUpperCase();
-
-                const {
-                    isMoveLegal,
-                    isCapturing,
-                    isPromoting,
-                    isCastling,
-                    isEnPassant,
-                    isChecking,
-                    enPassantablePawn,
-                } = await checkLegality({
-                    ID: pieceid.toLowerCase() as Piece,
-                    color: pieceColor,
-                    pieceElement: draggedPiece,
-                    pieceMoveCount: Number(draggedPiece.dataset.move_count),
-                    startSquare: originalSquare,
-                    destinationSquare: target as HTMLDivElement,
-                    moveIdx: moveIdx,
-                    isJustChecking: false,
-                });
-
-                if (
-                    target.classList.contains("square") &&
-                    pieceCanMove &&
-                    target !== originalSquare &&
-                    isMoveLegal
-                ) {
-                    let pos = (target as HTMLDivElement).dataset.pos;
-
-                    (draggedPiece.dataset.move_count as unknown as number) =
-                        +(draggedPiece.dataset.move_count ?? 0) + 1;
-
-                    ++moveIdx;
-
-                    if (!isPromoting) {
-                        target.innerHTML = "";
-                        target.appendChild(draggedPiece);
-                    } else {
-                        resetDraggedPieceStyles(
-                            document.querySelector(".dragged")!,
-                        );
-
-                        const selection = (await getPromotionSelection(
-                            pieceColor,
-                        )) as string;
-
-                        target.innerHTML = "";
-                        originalSquare.innerHTML = "";
-
-                        createPiece({
-                            id:
-                                pieceColor === "white"
-                                    ? selection.toUpperCase()
-                                    : selection,
-                            pos: (target as HTMLDivElement).dataset.pos!,
-                        });
-                    }
-
-                    document
-                        .querySelectorAll(".move-highlight")
-                        .forEach((element) =>
-                            element.classList.remove("move-highlight"),
-                        );
-                    originalSquare.classList.add("move-highlight");
-                    target.classList.add("move-highlight");
-
-                    handleAudio(isCapturing, isChecking);
-
-                    const { newMovesSinceCapture, newMovesSincePawnAdvance } =
-                        mutateDrawCounters(
-                            movesSinceCapture,
-                            movesSincePawnAdvance,
-                            isCapturing,
-                            pieceid,
-                        );
-
-                    movesSinceCapture = newMovesSinceCapture;
-                    movesSincePawnAdvance = newMovesSincePawnAdvance;
-
-                    if (isCastling) {
-                        const castlingSquares = CastlingMap.get(pos!)!;
-                        const posA =
-                            castlingSquares[castlingSquares.length - 1];
-                        const posB = castlingSquares[0];
-
-                        const { square: squareFirst, piece: pieceFirst } =
-                            getSquareAndPieceFromPos(posA) as SquareAndPiece;
-                        const { square: squareSecond } =
-                            getSquareAndPieceFromPos(posB) as SquareAndPiece;
-                        const rook = pieceFirst!;
-
-                        (rook.dataset.move_count as unknown as number) =
-                            +(rook.dataset.move_count ?? 0) + 1;
-
-                        squareFirst.innerHTML = "";
-                        squareSecond.appendChild(rook);
-                    }
-
-                    if (isEnPassant && enPassantablePawn) {
-                        enPassantablePawn.remove();
-                    }
-
-                    FENPositions.push(getFEN());
-
-                    const { isGameOver, FENPositions: positions } =
-                        await checkIfGameOver(
-                            moveIdx,
-                            pieceColor,
-                            isChecking,
-                            FENPositions,
-                            movesSincePawnAdvance,
-                            movesSinceCapture,
-                        );
-
-                    if (isGameOver) FENPositions = positions;
-                } else {
-                    undoMove(originalSquare, draggedPiece);
-                }
-
+            if (!pieceCanMove) {
+                undoMove(originalSquare, draggedPiece);
                 resetDraggedPieceStyles(draggedPiece);
+                return;
             }
 
+            let pieceid = draggedPiece.dataset.pieceid!.toUpperCase();
+
+            const {
+                isMoveLegal,
+                isCapturing,
+                isPromoting,
+                isCastling,
+                isEnPassant,
+                isChecking,
+                enPassantablePawn,
+            } = await checkLegality({
+                ID: pieceid.toLowerCase() as Piece,
+                color: pieceColor,
+                pieceElement: draggedPiece,
+                pieceMoveCount: Number(draggedPiece.dataset.move_count),
+                startSquare: originalSquare,
+                destinationSquare: target as HTMLDivElement,
+                moveIdx: moveIdx,
+                isJustChecking: false,
+            });
+
+            if (!isMoveLegal) {
+                undoMove(originalSquare, draggedPiece);
+                resetDraggedPieceStyles(draggedPiece);
+                return;
+            }
+
+            let pos = (target as HTMLDivElement).dataset.pos;
+
+            (draggedPiece.dataset.move_count as unknown as number) =
+                +(draggedPiece.dataset.move_count ?? 0) + 1;
+
+            ++moveIdx;
+
+            if (!isPromoting) {
+                target.innerHTML = "";
+                target.appendChild(draggedPiece);
+            } else {
+                resetDraggedPieceStyles(document.querySelector(".dragged")!);
+
+                const selection = (await getPromotionSelection(
+                    pieceColor,
+                )) as string;
+
+                target.innerHTML = "";
+                originalSquare.innerHTML = "";
+
+                createPiece({
+                    id:
+                        pieceColor === "white"
+                            ? selection.toUpperCase()
+                            : selection,
+                    pos: (target as HTMLDivElement).dataset.pos!,
+                });
+            }
+
+            document
+                .querySelectorAll(".move-highlight")
+                .forEach((element) =>
+                    element.classList.remove("move-highlight"),
+                );
+            originalSquare.classList.add("move-highlight");
+            target.classList.add("move-highlight");
+
+            handleAudio(isCapturing, isChecking);
+
+            const { newMovesSinceCapture, newMovesSincePawnAdvance } =
+                mutateDrawCounters(
+                    movesSinceCapture,
+                    movesSincePawnAdvance,
+                    isCapturing,
+                    pieceid,
+                );
+
+            movesSinceCapture = newMovesSinceCapture;
+            movesSincePawnAdvance = newMovesSincePawnAdvance;
+
+            if (isCastling) {
+                const castlingSquares = CastlingMap.get(pos!)!;
+                const posA = castlingSquares[castlingSquares.length - 1];
+                const posB = castlingSquares[0];
+
+                const { square: squareFirst, piece: pieceFirst } =
+                    getSquareAndPieceFromPos(posA) as SquareAndPiece;
+                const { square: squareSecond } = getSquareAndPieceFromPos(
+                    posB,
+                ) as SquareAndPiece;
+                const rook = pieceFirst!;
+
+                (rook.dataset.move_count as unknown as number) =
+                    +(rook.dataset.move_count ?? 0) + 1;
+
+                squareFirst.innerHTML = "";
+                squareSecond.appendChild(rook);
+            }
+
+            if (isEnPassant && enPassantablePawn) {
+                enPassantablePawn.remove();
+            }
+
+            FENPositions.push(getFEN());
+
+            const { isGameOver, FENPositions: positions } =
+                await checkIfGameOver(
+                    moveIdx,
+                    pieceColor,
+                    isChecking,
+                    FENPositions,
+                    movesSincePawnAdvance,
+                    movesSinceCapture,
+                );
+
+            if (isGameOver) FENPositions = positions;
+
+            resetDraggedPieceStyles(draggedPiece);
             document.removeEventListener("mousemove", onMouseMove);
             document.removeEventListener("mouseup", onMouseUp);
-
             draggedPiece = null;
         });
     });

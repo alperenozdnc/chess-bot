@@ -19,6 +19,7 @@ import {
     getFEN,
     getPromotionSelection,
     listLegalMoves,
+    makeBotMove,
 } from "@functions";
 import { CastlingMap } from "@maps";
 import { SquareAndPiece } from "@interfaces";
@@ -98,17 +99,26 @@ function clearHighlights(highlightedSquares: HTMLDivElement[]) {
     return highlightedSquares;
 }
 
+function playSound(audio: HTMLAudioElement) {
+    if (!audio.paused) {
+        const clone = audio.cloneNode() as HTMLAudioElement;
+        clone.play();
+    } else {
+        audio.play();
+    }
+}
+
 function handleAudio(isCapturing: boolean, isChecking: boolean) {
     if (isCapturing) {
         if (!isChecking) {
-            CAPTURE_SOUND.play();
+            playSound(CAPTURE_SOUND);
         } else {
-            CHECK_SOUND.play();
+            playSound(CHECK_SOUND);
         }
     } else if (isChecking) {
-        CHECK_SOUND.play();
+        playSound(CHECK_SOUND);
     } else {
-        MOVE_SOUND.play();
+        playSound(MOVE_SOUND);
     }
 }
 
@@ -136,10 +146,10 @@ function mutateDrawCounters(
     return { newMovesSincePawnAdvance, newMovesSinceCapture };
 }
 
-async function makeMove(
+export async function makeMove(
     draggedPiece: HTMLImageElement | null,
     moveIdx: number,
-    e: MouseEvent,
+    target: HTMLDivElement,
     highlightedSquares: HTMLDivElement[],
     originalSquare: HTMLDivElement,
     movesSinceCapture: number,
@@ -150,10 +160,6 @@ async function makeMove(
 
     const pieceColor = draggedPiece.dataset.color as PieceColor;
     let pieceCanMove = checkTurn(moveIdx, pieceColor);
-    let target = document.elementFromPoint(e.clientX, e.clientY)!;
-    target = (
-        target.classList.contains("piece") ? target.parentElement : target
-    )!;
 
     clearHighlights(highlightedSquares);
 
@@ -279,6 +285,8 @@ async function makeMove(
 }
 
 export function handlePieceMovement() {
+    const botColor: PieceColor = "black";
+
     let FENPositions: string[] = [INITIAL_POSITION];
 
     let draggedPiece: HTMLImageElement | null;
@@ -332,10 +340,17 @@ export function handlePieceMovement() {
         }
 
         document.addEventListener("mouseup", async function onMouseUp(e) {
+            let target = document.elementFromPoint(e.clientX, e.clientY)!;
+            target = (
+                target.classList.contains("piece")
+                    ? target.parentElement
+                    : target
+            )!;
+
             const move = await makeMove(
                 draggedPiece,
                 moveIdx,
-                e,
+                target as HTMLDivElement,
                 highlightedSquares,
                 originalSquare,
                 movesSinceCapture,
@@ -348,6 +363,26 @@ export function handlePieceMovement() {
                 movesSinceCapture = move.movesSinceCapture;
                 movesSincePawnAdvance = move.movesSincePawnAdvance;
                 FENPositions = move.FENPositions;
+
+                // setTimeout because js is single threaded and makes the piece not drop until the bot can play
+                setTimeout(async () => {
+                    const botMoveData = await makeBotMove(
+                        botColor,
+                        moveIdx,
+                        highlightedSquares,
+                        movesSinceCapture,
+                        movesSincePawnAdvance,
+                        FENPositions,
+                    );
+
+                    if (botMoveData) {
+                        moveIdx = botMoveData.moveIdx;
+                        movesSinceCapture = botMoveData.movesSinceCapture;
+                        movesSincePawnAdvance =
+                            botMoveData.movesSincePawnAdvance;
+                        FENPositions = botMoveData.FENPositions;
+                    }
+                }, 0);
             }
 
             document.removeEventListener("mousemove", onMouseMove);

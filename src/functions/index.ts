@@ -8,3 +8,4 @@ export { isSquareAttacked } from "./isSquareAttacked";
 export { checkForCheckmate } from "./checkForCheckmate";
 export { getFEN } from "./getFEN";
 export { checkIfGameOver } from "./checkIfGameOver";
+export { makeBotMove } from "./makeBotMove";

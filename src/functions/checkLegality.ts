@@ -1,12 +1,8 @@
-import { getPromotionSelection, isSquareAttacked } from "@functions";
+import { isSquareAttacked } from "@functions";
 import { FILES } from "@constants";
 import { Pieces } from "@enums";
 import { MoveData, MoveLegality, SquareAndPiece } from "@interfaces";
-import {
-    createPiece,
-    getSquareAndPieceFromPos,
-    resetDraggedPieceStyles,
-} from "@utils";
+import { getSquareAndPieceFromPos } from "@utils";
 import { PieceColor } from "@types";
 import { CastlingMap } from "@maps";
 

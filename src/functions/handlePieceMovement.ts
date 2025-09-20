@@ -284,7 +284,13 @@ export async function makeMove(
 
     draggedPiece = null;
 
-    return { moveIdx, movesSinceCapture, movesSincePawnAdvance, FENPositions };
+    return {
+        moveIdx,
+        movesSinceCapture,
+        movesSincePawnAdvance,
+        FENPositions,
+        isGameOver,
+    };
 }
 
 export function handlePieceMovement() {
@@ -366,6 +372,8 @@ export function handlePieceMovement() {
                 movesSinceCapture = move.movesSinceCapture;
                 movesSincePawnAdvance = move.movesSincePawnAdvance;
                 FENPositions = move.FENPositions;
+
+                if (move.isGameOver) return;
 
                 // setTimeout because js is single threaded and makes the piece not drop until the bot can play
                 setTimeout(async () => {

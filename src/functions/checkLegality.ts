@@ -2,7 +2,7 @@ import { isSquareAttacked } from "@functions";
 import { FILES } from "@constants";
 import { Pieces } from "@enums";
 import { MoveData, MoveLegality, SquareAndPiece } from "@interfaces";
-import { getSquareAndPieceFromPos } from "@utils";
+import { getSquareAndPieceFromPos, simulate } from "@utils";
 import { PieceColor } from "@types";
 import { CastlingMap } from "@maps";
 
@@ -282,10 +282,16 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
         attackerColor: color === "white" ? "black" : "white",
     });
     const destinationElement = destinationSquare.firstChild!;
+    const move = simulate(
+        pieceElement,
+        destinationElement as HTMLImageElement,
+        isCapturing,
+        isEnPassant,
+        destinationSquare,
+        startSquare,
+    );
 
-    pieceElement.remove();
-    if (isCapturing && !isEnPassant) destinationSquare.innerHTML = "";
-    destinationSquare.appendChild(pieceElement);
+    move.play();
 
     const isChecking = isSquareAttacked({
         pos: enemyKingPos as string,
@@ -296,10 +302,7 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
         attackerColor: color === "white" ? "black" : "white",
     });
 
-    pieceElement.remove();
-    if (isCapturing && !isEnPassant)
-        destinationSquare.appendChild(destinationElement);
-    startSquare.appendChild(pieceElement);
+    move.unplay();
 
     if (isCheck) isMoveLegal = false;
 

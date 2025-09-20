@@ -155,6 +155,7 @@ export async function makeMove(
     movesSinceCapture: number,
     movesSincePawnAdvance: number,
     FENPositions: string[],
+    isComputer?: boolean,
 ) {
     if (!draggedPiece) return;
 
@@ -209,9 +210,11 @@ export async function makeMove(
         target.innerHTML = "";
         target.appendChild(draggedPiece);
     } else {
-        resetDraggedPieceStyles(document.querySelector(".dragged")!);
+        resetDraggedPieceStyles(draggedPiece);
 
-        const selection = (await getPromotionSelection(pieceColor)) as string;
+        const selection = !isComputer
+            ? ((await getPromotionSelection(pieceColor)) as string)
+            : "q";
 
         target.innerHTML = "";
         originalSquare.innerHTML = "";

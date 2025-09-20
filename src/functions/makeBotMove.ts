@@ -59,6 +59,7 @@ export async function makeBotMove(
         movesSinceCapture,
         movesSincePawnAdvance,
         FENPositions,
+        true,
     );
 
     if (moveData) {

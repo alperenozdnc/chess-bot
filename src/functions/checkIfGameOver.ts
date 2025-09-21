@@ -3,11 +3,7 @@ import { Piece, PieceColor } from "@types";
 import { checkForCheckmate } from "@functions";
 import { countMaterials } from "@utils";
 import { Pieces } from "@enums";
-
-interface GameData {
-    isGameOver: boolean;
-    FENPositions: string[];
-}
+import { GameState } from "./handlePieceMovement";
 
 type GameEndReason = "checkmate" | "draw";
 type DrawReason =
@@ -55,50 +51,49 @@ function handleEnd(
 }
 
 export async function checkIfGameOver(
-    moveIdx: number,
-    pieceColor: PieceColor,
+    state: GameState,
     isChecking: boolean,
-    FENPositions: string[],
-    movesSincePawnAdvance: number,
-    movesSinceCapture: number,
-): Promise<GameData> {
-    let isGameOver = false;
+    pieceColor: PieceColor,
+) {
     let threefoldRepetition = false;
 
-    FENPositions.forEach((posA) => {
-        const freq = FENPositions.filter((posB) => posA === posB).length;
+    state.FENPositions.forEach((posA) => {
+        const freq = state.FENPositions.filter((posB) => posA === posB).length;
 
         if (freq === 3) threefoldRepetition = true;
     });
 
     const noLegalMovesLeft = await checkForCheckmate(
-        moveIdx + 1,
+        state.moveIdx + 1,
         pieceColor === "white" ? "black" : "white",
     );
 
     const { white, black } = countMaterials();
 
     if (isChecking && noLegalMovesLeft) {
-        isGameOver = true;
+        state.isGameOver = true;
         handleEnd("checkmate", pieceColor);
     } else if (noLegalMovesLeft) {
-        isGameOver = true;
+        state.isGameOver = true;
         handleEnd("draw", pieceColor, "stalemate");
     } else if (threefoldRepetition) {
-        isGameOver = true;
+        state.isGameOver = true;
         handleEnd("draw", pieceColor, "repetition");
-    } else if (movesSincePawnAdvance >= 100 && movesSinceCapture >= 100) {
-        isGameOver = true;
+    } else if (
+        state.movesSincePawnAdvance >= 100 &&
+        state.movesSinceCapture >= 100
+    ) {
+        state.isGameOver = true;
         handleEnd("draw", pieceColor, "50 move rule");
     } else if (white + black === 0) {
-        isGameOver = true;
+        state.isGameOver = true;
         handleEnd("draw", pieceColor, "insufficient material");
     } else if (
         !doesPieceExist("white", Pieces.Pawn).result &&
         !doesPieceExist("black", Pieces.Pawn).result
     ) {
         if (white <= 3 && black <= 3) {
-            isGameOver = true;
+            state.isGameOver = true;
             handleEnd("draw", pieceColor, "insufficient material");
         } else if (white + black === 6 && (white === 0 || black === 0)) {
             let colorWithNoMaterials =
@@ -113,16 +108,13 @@ export async function checkIfGameOver(
                 doesPieceExist(colorWithMaterials, Pieces.Knight).pieceCount ===
                 2
             ) {
-                isGameOver = true;
+                state.isGameOver = true;
                 handleEnd("draw", pieceColor, "insufficient material");
             }
         }
     }
 
-    if (isGameOver) FENPositions = [INITIAL_POSITION];
-
-    return {
-        isGameOver,
-        FENPositions,
-    };
+    if (state.isGameOver) state.FENPositions = [INITIAL_POSITION];
+    state.isGameOver = false;
+    state.moveIdx = 0;
 }

@@ -1,44 +1,33 @@
-import { Piece, PieceColor } from "@types";
-import { listLegalMoves } from "@functions";
-import { makeMove } from "./handlePieceMovement";
 import { BOARD } from "@constants";
+import { GameState, makeMove } from "./handlePieceMovement";
+import { listLegalMoves } from "./listLegalMoves";
+import { Piece } from "@types";
 
-export async function makeBotMove(
-    color: PieceColor,
-    moveIdx: number,
-    highlightedSquares: HTMLDivElement[],
-    movesSinceCapture: number,
-    movesSincePawnAdvance: number,
-    FENPositions: string[],
-) {
+export async function makeBotMove(state: GameState) {
     const pieces = Array.from(
-        BOARD.querySelectorAll(`[data-color="${color}"]`),
+        BOARD.querySelectorAll(`[data-color="${state.botColor}"]`),
     ) as HTMLImageElement[];
 
     const allLegalMoves = [];
 
     for (const botPiece of pieces) {
-        const pieceid = botPiece.dataset.pieceid as Piece;
         const startSquare = botPiece.parentElement as HTMLDivElement;
-
-        if (!botPiece) continue;
-
-        const pieceMoveCount = +botPiece.dataset.move_count!;
+        const pieceMoveCount = Number(botPiece.dataset.move_count);
 
         const legalMoves = await listLegalMoves({
-            piece: pieceid,
-            color,
-            startSquare,
+            piece: botPiece.dataset.pieceid as Piece,
+            color: state.botColor,
+            startSquare: botPiece.parentElement as HTMLDivElement,
             pieceElement: botPiece,
             pieceMoveCount,
-            moveIdx,
+            moveIdx: state.moveIdx,
         });
 
-        for (const legalMove of legalMoves) {
+        for (const move of legalMoves) {
             allLegalMoves.push({
-                ...legalMove,
                 piece: botPiece,
                 startSquare,
+                square: move.square,
             });
         }
     }
@@ -48,26 +37,13 @@ export async function makeBotMove(
 
     if (!move) return;
 
-    const movePiece = move.piece;
+    state.draggedPiece = move.piece;
+    state.originalSquare = move.startSquare;
+    state.moveIdx += 1;
 
-    const moveData = await makeMove(
-        movePiece,
-        moveIdx,
-        move.square,
-        highlightedSquares,
-        allLegalMoves[allLegalMoves.indexOf(move)].startSquare,
-        movesSinceCapture,
-        movesSincePawnAdvance,
-        FENPositions,
-        true,
-    );
+    const isMoveMade = await makeMove(state, move.square, true);
 
-    if (moveData) {
-        moveIdx = moveData.moveIdx;
-        movesSinceCapture = moveData.movesSinceCapture;
-        movesSincePawnAdvance = moveData.movesSincePawnAdvance;
-        FENPositions = moveData.FENPositions;
-    }
-
-    return { moveIdx, movesSinceCapture, movesSincePawnAdvance, FENPositions };
+    if (!isMoveMade) state.moveIdx -= 1;
+    state.draggedPiece = null;
+    state.originalSquare = undefined;
 }

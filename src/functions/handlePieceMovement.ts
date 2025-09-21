@@ -25,36 +25,61 @@ import { CastlingMap } from "@maps";
 import { SquareAndPiece } from "@interfaces";
 import { Pieces } from "@enums";
 
-function moveAt(
-    draggedPiece: HTMLDivElement | null,
-    offsetX: number,
-    offsetY: number,
-    pageX: number,
-    pageY: number,
-) {
-    if (draggedPiece) {
-        draggedPiece.style.left = `${pageX - offsetX}px`;
-        draggedPiece.style.top = `${pageY - offsetY}px`;
+export interface GameState {
+    botColor: PieceColor;
+    FENPositions: string[];
+    draggedPiece: HTMLImageElement | null;
+    originalSquare: HTMLDivElement | undefined;
+    highlightedSquares: HTMLDivElement[];
+    offsetX: number;
+    offsetY: number;
+    moveIdx: number;
+    movesSincePawnAdvance: number;
+    movesSinceCapture: number;
+    isGameOver: boolean;
+}
+
+function initGameState(): GameState {
+    return {
+        botColor: "black",
+        FENPositions: [INITIAL_POSITION],
+        draggedPiece: null,
+        originalSquare: undefined,
+        highlightedSquares: [],
+        offsetX: 0,
+        offsetY: 0,
+        moveIdx: 0,
+        movesSinceCapture: 0,
+        movesSincePawnAdvance: 0,
+        isGameOver: false,
+    };
+}
+
+function moveAt(state: GameState, pageX: number, pageY: number) {
+    if (state.draggedPiece) {
+        state.draggedPiece.style.left = `${pageX - state.offsetX}px`;
+        state.draggedPiece.style.top = `${pageY - state.offsetY}px`;
     }
 }
 
-async function highlightMoves(
-    moveIdx: number,
-    pieceColor: PieceColor,
-    piece: HTMLImageElement,
-    originalSquare: HTMLDivElement,
-) {
-    let pieceCanMove = checkTurn(moveIdx, pieceColor);
+async function highlightMoves(state: GameState) {
+    if (!state.draggedPiece || !state.originalSquare) return;
+
+    let pieceCanMove = checkTurn(
+        state.moveIdx,
+        state.draggedPiece.dataset.color! as PieceColor,
+    );
     let highlightedSquares = [];
 
     if (pieceCanMove) {
         const legalMoves = await listLegalMoves({
-            piece: piece.dataset.pieceid! as Piece,
-            startSquare: originalSquare,
-            color: piece.dataset.color! as unknown as PieceColor,
-            pieceElement: piece,
-            pieceMoveCount: +piece.dataset.move_count! as unknown as number,
-            moveIdx: moveIdx,
+            piece: state.draggedPiece.dataset.pieceid! as Piece,
+            startSquare: state.originalSquare!,
+            color: state.draggedPiece.dataset.color! as unknown as PieceColor,
+            pieceElement: state.draggedPiece,
+            pieceMoveCount: +state.draggedPiece.dataset
+                .move_count! as unknown as number,
+            moveIdx: state.moveIdx,
         });
 
         for (const legalMove of legalMoves) {
@@ -124,56 +149,45 @@ function handleAudio(isCapturing: boolean, isChecking: boolean) {
 }
 
 function mutateDrawCounters(
-    movesSinceCapture: number,
-    movesSincePawnAdvance: number,
+    state: GameState,
     isCapturing: boolean,
     pieceid: string,
 ) {
-    let newMovesSinceCapture = movesSinceCapture;
-    let newMovesSincePawnAdvance = movesSincePawnAdvance;
-
     if (isCapturing) {
-        newMovesSinceCapture = 0;
+        state.movesSinceCapture = 0;
     } else {
-        newMovesSinceCapture += 1;
+        state.movesSinceCapture += 1;
     }
 
     if (pieceid.toLowerCase() === Pieces.Pawn) {
-        newMovesSincePawnAdvance = 0;
+        state.movesSincePawnAdvance = 0;
     } else {
-        newMovesSincePawnAdvance++;
+        state.movesSincePawnAdvance++;
     }
-
-    return { newMovesSincePawnAdvance, newMovesSinceCapture };
 }
 
 export async function makeMove(
-    draggedPiece: HTMLImageElement | null,
-    moveIdx: number,
+    state: GameState,
     target: HTMLDivElement,
-    highlightedSquares: HTMLDivElement[],
-    originalSquare: HTMLDivElement,
-    movesSinceCapture: number,
-    movesSincePawnAdvance: number,
-    FENPositions: string[],
     isComputer?: boolean,
 ) {
-    if (!draggedPiece) return;
+    if (!state.draggedPiece) return;
 
-    const pieceColor = draggedPiece.dataset.color as PieceColor;
-    let pieceCanMove = checkTurn(moveIdx, pieceColor);
+    const pieceColor = state.draggedPiece.dataset.color as PieceColor;
+    let pieceCanMove = checkTurn(state.moveIdx, pieceColor);
 
-    clearHighlights(highlightedSquares);
+    clearHighlights(state.highlightedSquares);
 
-    if (isTargetWrong(target, originalSquare, draggedPiece)) return;
+    if (isTargetWrong(target, state.originalSquare!, state.draggedPiece))
+        return;
 
     if (!pieceCanMove) {
-        undoMove(originalSquare, draggedPiece);
-        resetDraggedPieceStyles(draggedPiece);
+        undoMove(state.originalSquare!, state.draggedPiece);
+        resetDraggedPieceStyles(state.draggedPiece);
         return;
     }
 
-    let pieceid = draggedPiece.dataset.pieceid!.toUpperCase();
+    let pieceid = state.draggedPiece.dataset.pieceid!.toUpperCase();
 
     const {
         isMoveLegal,
@@ -186,32 +200,32 @@ export async function makeMove(
     } = await checkLegality({
         ID: pieceid.toLowerCase() as Piece,
         color: pieceColor,
-        pieceElement: draggedPiece,
-        pieceMoveCount: Number(draggedPiece.dataset.move_count),
-        startSquare: originalSquare,
+        pieceElement: state.draggedPiece,
+        pieceMoveCount: Number(state.draggedPiece.dataset.move_count),
+        startSquare: state.originalSquare!,
         destinationSquare: target as HTMLDivElement,
-        moveIdx: moveIdx,
+        moveIdx: state.moveIdx,
         isJustChecking: false,
     });
 
     if (!isMoveLegal) {
-        undoMove(originalSquare, draggedPiece);
-        resetDraggedPieceStyles(draggedPiece);
+        undoMove(state.originalSquare!, state.draggedPiece);
+        resetDraggedPieceStyles(state.draggedPiece);
         return;
     }
 
     let pos = (target as HTMLDivElement).dataset.pos;
 
-    (draggedPiece.dataset.move_count as unknown as number) =
-        +(draggedPiece.dataset.move_count ?? 0) + 1;
+    (state.draggedPiece.dataset.move_count as unknown as number) =
+        +(state.draggedPiece.dataset.move_count ?? 0) + 1;
 
-    ++moveIdx;
+    ++state.moveIdx;
 
     if (!isPromoting) {
         target.innerHTML = "";
-        target.appendChild(draggedPiece);
+        target.appendChild(state.draggedPiece);
     } else {
-        resetDraggedPieceStyles(draggedPiece);
+        resetDraggedPieceStyles(state.draggedPiece);
 
         // at least for now
         const selection = !isComputer
@@ -219,7 +233,7 @@ export async function makeMove(
             : Pieces.Queen;
 
         target.innerHTML = "";
-        originalSquare.innerHTML = "";
+        state.originalSquare!.innerHTML = "";
 
         createPiece({
             id: pieceColor === "white" ? selection.toUpperCase() : selection,
@@ -230,21 +244,11 @@ export async function makeMove(
     document
         .querySelectorAll(".move-highlight")
         .forEach((element) => element.classList.remove("move-highlight"));
-    originalSquare.classList.add("move-highlight");
+    state.originalSquare!.classList.add("move-highlight");
     target.classList.add("move-highlight");
 
     handleAudio(isCapturing, isChecking);
-
-    const { newMovesSinceCapture, newMovesSincePawnAdvance } =
-        mutateDrawCounters(
-            movesSinceCapture,
-            movesSincePawnAdvance,
-            isCapturing,
-            pieceid,
-        );
-
-    movesSinceCapture = newMovesSinceCapture;
-    movesSincePawnAdvance = newMovesSincePawnAdvance;
+    mutateDrawCounters(state, isCapturing, pieceid);
 
     if (isCastling) {
         const castlingSquares = CastlingMap.get(pos!)!;
@@ -269,88 +273,54 @@ export async function makeMove(
         enPassantablePawn.remove();
     }
 
-    FENPositions.push(getFEN());
+    state.FENPositions.push(getFEN());
 
-    const { isGameOver, FENPositions: positions } = await checkIfGameOver(
-        moveIdx,
-        pieceColor,
-        isChecking,
-        FENPositions,
-        movesSincePawnAdvance,
-        movesSinceCapture,
-    );
+    await checkIfGameOver(state, isChecking, pieceColor);
 
-    if (isGameOver) FENPositions = positions;
+    resetDraggedPieceStyles(state.draggedPiece);
+    state.draggedPiece = null;
 
-    resetDraggedPieceStyles(draggedPiece);
-
-    draggedPiece = null;
-
-    return {
-        moveIdx,
-        movesSinceCapture,
-        movesSincePawnAdvance,
-        FENPositions,
-        isGameOver,
-    };
+    return true;
 }
 
 export function handlePieceMovement() {
-    const botColor: PieceColor = "black";
-
-    let FENPositions: string[] = [INITIAL_POSITION];
-
-    let draggedPiece: HTMLImageElement | null;
-    let originalSquare: HTMLDivElement;
-    let highlightedSquares: HTMLDivElement[] = [];
-
-    let offsetX = 0;
-    let offsetY = 0;
-    let moveIdx = 0;
-
-    let movesSincePawnAdvance = 0;
-    let movesSinceCapture = 0;
+    const state = initGameState();
 
     const resetButton = document.getElementById(
         "reset-button",
     ) as HTMLButtonElement;
 
     resetButton!.addEventListener("click", () => {
-        moveIdx = 0;
+        state.moveIdx = 0;
         drawBoardfromFEN(INITIAL_POSITION);
-        FENPositions = [INITIAL_POSITION];
+        state.FENPositions = [INITIAL_POSITION];
     });
 
     document.addEventListener("mousedown", async (e) => {
         if ((e.target as HTMLElement).classList.contains("piece")) {
-            draggedPiece = e.target as HTMLImageElement;
-            originalSquare = draggedPiece.parentElement as HTMLDivElement;
+            state.draggedPiece = e.target as HTMLImageElement;
+            state.originalSquare = state.draggedPiece
+                .parentElement as HTMLDivElement;
 
-            const rect = draggedPiece.getBoundingClientRect();
+            const rect = state.draggedPiece.getBoundingClientRect();
 
-            offsetX = e.clientX - rect.left;
-            offsetY = e.clientY - rect.top;
+            state.offsetX = e.clientX - rect.left;
+            state.offsetY = e.clientY - rect.top;
 
-            draggedPiece.classList.add("dragged");
-            document.body.appendChild(draggedPiece);
-            moveAt(draggedPiece, offsetX, offsetY, e.pageX, e.pageY);
+            state.draggedPiece.classList.add("dragged");
+            document.body.appendChild(state.draggedPiece);
+            moveAt(state, e.pageX, e.pageY);
 
-            const pieceColor = draggedPiece.dataset.color as PieceColor;
-            highlightedSquares = await highlightMoves(
-                moveIdx,
-                pieceColor,
-                draggedPiece,
-                originalSquare,
-            );
+            state.highlightedSquares = (await highlightMoves(state)) ?? [];
         }
 
         document.addEventListener("mousemove", onMouseMove);
 
         function onMouseMove(e: MouseEvent) {
-            moveAt(draggedPiece, offsetX, offsetY, e.pageX, e.pageY);
+            moveAt(state, e.pageX, e.pageY);
         }
 
-        document.addEventListener("mouseup", async function onMouseUp(e) {
+        async function onMouseUp(e: MouseEvent) {
             let target = document.elementFromPoint(e.clientX, e.clientY)!;
             target = (
                 target.classList.contains("piece")
@@ -358,48 +328,19 @@ export function handlePieceMovement() {
                     : target
             )!;
 
-            const move = await makeMove(
-                draggedPiece,
-                moveIdx,
-                target as HTMLDivElement,
-                highlightedSquares,
-                originalSquare,
-                movesSinceCapture,
-                movesSincePawnAdvance,
-                FENPositions,
-            );
+            const isMoveMade = await makeMove(state, target as HTMLDivElement);
 
-            if (move) {
-                moveIdx = move.moveIdx;
-                movesSinceCapture = move.movesSinceCapture;
-                movesSincePawnAdvance = move.movesSincePawnAdvance;
-                FENPositions = move.FENPositions;
+            if (!isMoveMade) return;
 
-                if (move.isGameOver) return;
-
-                // setTimeout because js is single threaded and makes the piece not drop until the bot can play
-                setTimeout(async () => {
-                    const botMoveData = await makeBotMove(
-                        botColor,
-                        moveIdx,
-                        highlightedSquares,
-                        movesSinceCapture,
-                        movesSincePawnAdvance,
-                        FENPositions,
-                    );
-
-                    if (botMoveData) {
-                        moveIdx = botMoveData.moveIdx;
-                        movesSinceCapture = botMoveData.movesSinceCapture;
-                        movesSincePawnAdvance =
-                            botMoveData.movesSincePawnAdvance;
-                        FENPositions = botMoveData.FENPositions;
-                    }
-                }, 0);
-            }
+            // setTimeout because js is single threaded and makes the piece not drop until the bot can play
+            setTimeout(async () => {
+                await makeBotMove(state);
+            }, 0);
 
             document.removeEventListener("mousemove", onMouseMove);
             document.removeEventListener("mouseup", onMouseUp);
-        });
+        }
+
+        document.addEventListener("mouseup", onMouseUp);
     });
 }

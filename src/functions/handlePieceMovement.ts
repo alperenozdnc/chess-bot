@@ -23,6 +23,7 @@ import {
 } from "@functions";
 import { CastlingMap } from "@maps";
 import { SquareAndPiece } from "@interfaces";
+import { Pieces } from "@enums";
 
 function moveAt(
     draggedPiece: HTMLDivElement | null,
@@ -137,7 +138,7 @@ function mutateDrawCounters(
         newMovesSinceCapture += 1;
     }
 
-    if (pieceid.toLowerCase() === "p") {
+    if (pieceid.toLowerCase() === Pieces.Pawn) {
         newMovesSincePawnAdvance = 0;
     } else {
         newMovesSincePawnAdvance++;
@@ -212,9 +213,10 @@ export async function makeMove(
     } else {
         resetDraggedPieceStyles(draggedPiece);
 
+        // at least for now
         const selection = !isComputer
             ? ((await getPromotionSelection(pieceColor)) as string)
-            : "q";
+            : Pieces.Queen;
 
         target.innerHTML = "";
         originalSquare.innerHTML = "";

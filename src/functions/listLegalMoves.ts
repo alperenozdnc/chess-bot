@@ -5,7 +5,7 @@ import { LegalMoveData } from "@interfaces";
 interface Data {
     piece: Piece;
     color: PieceColor;
-    pieceElement: HTMLImageElement,
+    pieceElement: HTMLImageElement;
     pieceMoveCount: number;
     startSquare: HTMLDivElement;
     moveIdx: number;

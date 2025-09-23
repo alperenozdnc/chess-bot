@@ -1,18 +1,13 @@
-import { drawBoardfromFEN } from "@functions";
+import { drawBoard } from "@functions";
+import { GameState } from "@interfaces";
 
-export function handleBoardFlipping(FEN: string) {
-    let isBoardFlipped = false;
-
+export function handleBoardFlipping(state: GameState) {
     const flipButton = document.getElementById(
         "flip-button",
     ) as HTMLButtonElement;
 
     flipButton!.addEventListener("click", () => {
-        isBoardFlipped = !isBoardFlipped;
-
-        drawBoardfromFEN(
-            isBoardFlipped ? FEN.split("").reverse().join("") : FEN,
-            isBoardFlipped,
-        );
+        state.isBoardFlipped = !state.isBoardFlipped;
+        drawBoard(state);
     });
 }

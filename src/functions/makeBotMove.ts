@@ -1,7 +1,7 @@
 import { BOARD } from "@constants";
-import { GameState, makeMove } from "./handlePieceMovement";
-import { listLegalMoves } from "./listLegalMoves";
-import { Piece } from "@types";
+import { makeMove } from "./handlePieceMovement";
+import { listLegalMoves } from "@functions";
+import { GameState } from "@interfaces";
 
 export async function makeBotMove(state: GameState) {
     const pieces = Array.from(
@@ -12,16 +12,11 @@ export async function makeBotMove(state: GameState) {
 
     for (const botPiece of pieces) {
         const startSquare = botPiece.parentElement as HTMLDivElement;
-        const pieceMoveCount = Number(botPiece.dataset.move_count);
 
-        const legalMoves = await listLegalMoves({
-            piece: botPiece.dataset.pieceid as Piece,
-            color: state.botColor,
-            startSquare: botPiece.parentElement as HTMLDivElement,
-            pieceElement: botPiece,
-            pieceMoveCount,
-            moveIdx: state.moveIdx,
-        });
+        state.originalSquare = startSquare;
+        state.draggedPiece = botPiece;
+
+        const legalMoves = await listLegalMoves({ state });
 
         for (const move of legalMoves) {
             allLegalMoves.push({
@@ -39,11 +34,9 @@ export async function makeBotMove(state: GameState) {
 
     state.draggedPiece = move.piece;
     state.originalSquare = move.startSquare;
-    state.moveIdx += 1;
 
-    const isMoveMade = await makeMove(state, move.square, true);
+    await makeMove(state, move.square, true);
 
-    if (!isMoveMade) state.moveIdx -= 1;
     state.draggedPiece = null;
     state.originalSquare = undefined;
 }

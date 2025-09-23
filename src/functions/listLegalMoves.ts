@@ -1,23 +1,13 @@
-import { Piece, PieceColor } from "@types";
+import { Piece } from "@types";
 import { checkLegality } from "@functions";
-import { LegalMoveData } from "@interfaces";
+import { GameState, LegalMoveData } from "@interfaces";
 
 interface Data {
-    piece: Piece;
-    color: PieceColor;
-    pieceElement: HTMLImageElement;
-    pieceMoveCount: number;
-    startSquare: HTMLDivElement;
-    moveIdx: number;
+    state: GameState;
 }
 
 export async function listLegalMoves({
-    piece,
-    color,
-    startSquare,
-    pieceElement,
-    pieceMoveCount,
-    moveIdx,
+    state,
 }: Data): Promise<LegalMoveData[]> {
     let squares: HTMLDivElement[] = [];
 
@@ -28,16 +18,24 @@ export async function listLegalMoves({
     let legalMoves: LegalMoveData[] = [];
 
     for (const square of squares) {
-        if (square === startSquare) continue;
+        if (square === state.originalSquare) continue;
+        if (!state.draggedPiece) break;
+
+        let pieceid = state.draggedPiece.dataset.pieceid!.toUpperCase();
+        const pieceObject = state.Board.find(
+            (piece) => piece.pos === state.originalSquare!.dataset.pos,
+        );
+
+        if (!pieceObject) continue;
 
         const { isMoveLegal, isCapturing } = await checkLegality({
-            ID: piece,
-            color: color,
-            pieceElement,
-            pieceMoveCount: pieceMoveCount,
-            startSquare,
+            ID: pieceid.toLowerCase() as Piece,
+            color: pieceObject.color,
+            pieceElement: state.draggedPiece,
+            pieceMoveCount: pieceObject!.moveCount,
+            startSquare: state.originalSquare!,
             destinationSquare: square,
-            moveIdx: moveIdx,
+            moveIdx: state.moveIdx,
             isJustChecking: true,
         });
 

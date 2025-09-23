@@ -1,59 +1,23 @@
-import {
-    CAPTURE_SOUND,
-    CHECK_SOUND,
-    INITIAL_POSITION,
-    MOVE_SOUND,
-} from "@constants";
+import { CAPTURE_SOUND, CHECK_SOUND, MOVE_SOUND } from "@constants";
 import { Piece, PieceColor } from "@types";
 import {
     checkTurn,
-    createPiece,
-    getSquareAndPieceFromPos,
     resetDraggedPieceStyles,
     undoMove,
+    updateBoard,
 } from "@utils";
 import {
     checkIfGameOver,
     checkLegality,
-    drawBoardfromFEN,
     getFEN,
     getPromotionSelection,
     listLegalMoves,
     makeBotMove,
 } from "@functions";
 import { CastlingMap } from "@maps";
-import { SquareAndPiece } from "@interfaces";
+import { GameState } from "@interfaces";
 import { Pieces } from "@enums";
-
-export interface GameState {
-    botColor: PieceColor;
-    FENPositions: string[];
-    draggedPiece: HTMLImageElement | null;
-    originalSquare: HTMLDivElement | undefined;
-    highlightedSquares: HTMLDivElement[];
-    offsetX: number;
-    offsetY: number;
-    moveIdx: number;
-    movesSincePawnAdvance: number;
-    movesSinceCapture: number;
-    isGameOver: boolean;
-}
-
-function initGameState(): GameState {
-    return {
-        botColor: "black",
-        FENPositions: [INITIAL_POSITION],
-        draggedPiece: null,
-        originalSquare: undefined,
-        highlightedSquares: [],
-        offsetX: 0,
-        offsetY: 0,
-        moveIdx: 0,
-        movesSinceCapture: 0,
-        movesSincePawnAdvance: 0,
-        isGameOver: false,
-    };
-}
+import { resetBoard } from "@utils";
 
 function moveAt(state: GameState, pageX: number, pageY: number) {
     if (state.draggedPiece) {
@@ -69,21 +33,14 @@ async function highlightMoves(state: GameState) {
         state.moveIdx,
         state.draggedPiece.dataset.color! as PieceColor,
     );
-    let highlightedSquares = [];
 
     if (pieceCanMove) {
         const legalMoves = await listLegalMoves({
-            piece: state.draggedPiece.dataset.pieceid! as Piece,
-            startSquare: state.originalSquare!,
-            color: state.draggedPiece.dataset.color! as unknown as PieceColor,
-            pieceElement: state.draggedPiece,
-            pieceMoveCount: +state.draggedPiece.dataset
-                .move_count! as unknown as number,
-            moveIdx: state.moveIdx,
+            state,
         });
 
         for (const legalMove of legalMoves) {
-            highlightedSquares.push(legalMove.square);
+            state.highlightedSquares.push(legalMove.square);
 
             if (legalMove.isCapturing) {
                 legalMove.square.classList.add("capturable-highlight");
@@ -92,8 +49,6 @@ async function highlightMoves(state: GameState) {
             }
         }
     }
-
-    return highlightedSquares;
 }
 
 function isTargetWrong(
@@ -113,16 +68,14 @@ function isTargetWrong(
     return result;
 }
 
-function clearHighlights(highlightedSquares: HTMLDivElement[]) {
-    if (highlightedSquares.length > 0) {
-        for (const square of highlightedSquares) {
+function clearHighlights(state: GameState) {
+    if (state.highlightedSquares.length > 0) {
+        for (const square of state.highlightedSquares) {
             square.classList.remove("highlight", "capturable-highlight");
         }
 
-        highlightedSquares = [];
+        state.highlightedSquares = [];
     }
-
-    return highlightedSquares;
 }
 
 function playSound(audio: HTMLAudioElement) {
@@ -176,7 +129,7 @@ export async function makeMove(
     const pieceColor = state.draggedPiece.dataset.color as PieceColor;
     let pieceCanMove = checkTurn(state.moveIdx, pieceColor);
 
-    clearHighlights(state.highlightedSquares);
+    clearHighlights(state);
 
     if (isTargetWrong(target, state.originalSquare!, state.draggedPiece))
         return;
@@ -188,6 +141,9 @@ export async function makeMove(
     }
 
     let pieceid = state.draggedPiece.dataset.pieceid!.toUpperCase();
+    const pieceObject = state.Board.find(
+        (piece) => piece.pos === state.originalSquare!.dataset.pos,
+    );
 
     const {
         isMoveLegal,
@@ -201,7 +157,7 @@ export async function makeMove(
         ID: pieceid.toLowerCase() as Piece,
         color: pieceColor,
         pieceElement: state.draggedPiece,
-        pieceMoveCount: Number(state.draggedPiece.dataset.move_count),
+        pieceMoveCount: pieceObject!.moveCount,
         startSquare: state.originalSquare!,
         destinationSquare: target as HTMLDivElement,
         moveIdx: state.moveIdx,
@@ -216,14 +172,62 @@ export async function makeMove(
 
     let pos = (target as HTMLDivElement).dataset.pos;
 
-    (state.draggedPiece.dataset.move_count as unknown as number) =
-        +(state.draggedPiece.dataset.move_count ?? 0) + 1;
-
     ++state.moveIdx;
+    pieceObject!.moveCount += 1;
+
+    if (!pieceObject) {
+        console.error("piece not found");
+        return;
+    }
+
+    if (!target.dataset.pos) {
+        console.error("target not found");
+        return;
+    }
+
+    state.FENPositions.push(getFEN());
+
+    state.moveHighlights = [];
+    state.moveHighlights.push(
+        state.originalSquare!.dataset.pos as string,
+        target.dataset.pos,
+    );
 
     if (!isPromoting) {
-        target.innerHTML = "";
-        target.appendChild(state.draggedPiece);
+        if (!isCapturing) {
+            updateBoard(
+                {
+                    type: "MOVE",
+                    data: {
+                        piece: pieceObject,
+                        destinationPos: target.dataset.pos,
+                    },
+                },
+                state,
+            );
+        } else {
+            updateBoard(
+                {
+                    type: "CAPTURE",
+                    data: {
+                        piece: pieceObject,
+                        destinationPos: target.dataset.pos,
+                        capturedPiece: state.Board.find(
+                            (piece) => piece.pos === target.dataset.pos,
+                        )!,
+                        isEnPassant,
+                        enPassantAblePawn: isEnPassant
+                            ? state.Board.find(
+                                (piece) =>
+                                    piece.pos ===
+                                    enPassantablePawn!.dataset.pos,
+                            )
+                            : undefined,
+                    },
+                },
+                state,
+            );
+        }
     } else {
         resetDraggedPieceStyles(state.draggedPiece);
 
@@ -232,20 +236,22 @@ export async function makeMove(
             ? ((await getPromotionSelection(pieceColor)) as string)
             : Pieces.Queen;
 
-        target.innerHTML = "";
-        state.originalSquare!.innerHTML = "";
-
-        createPiece({
-            id: pieceColor === "white" ? selection.toUpperCase() : selection,
-            pos: (target as HTMLDivElement).dataset.pos!,
-        });
+        updateBoard(
+            {
+                type: "PROMOTE",
+                data: {
+                    piece: pieceObject,
+                    destinationPos: target.dataset.pos,
+                    promoteTo: selection as Piece,
+                    isCapturing,
+                    capturedPiece: state.Board.find(
+                        (piece) => piece.pos === target.dataset.pos,
+                    ),
+                },
+            },
+            state,
+        );
     }
-
-    document
-        .querySelectorAll(".move-highlight")
-        .forEach((element) => element.classList.remove("move-highlight"));
-    state.originalSquare!.classList.add("move-highlight");
-    target.classList.add("move-highlight");
 
     handleAudio(isCapturing, isChecking);
     mutateDrawCounters(state, isCapturing, pieceid);
@@ -255,47 +261,37 @@ export async function makeMove(
         const posA = castlingSquares[castlingSquares.length - 1];
         const posB = castlingSquares[0];
 
-        const { square: squareFirst, piece: pieceFirst } =
-            getSquareAndPieceFromPos(posA) as SquareAndPiece;
-        const { square: squareSecond } = getSquareAndPieceFromPos(
-            posB,
-        ) as SquareAndPiece;
-        const rook = pieceFirst!;
-
-        (rook.dataset.move_count as unknown as number) =
-            +(rook.dataset.move_count ?? 0) + 1;
-
-        squareFirst.innerHTML = "";
-        squareSecond.appendChild(rook);
+        updateBoard(
+            {
+                type: "CASTLE",
+                data: {
+                    king: {
+                        piece: pieceObject,
+                        destinationPos: target.dataset.pos,
+                    },
+                    rook: {
+                        piece: state.Board.find((piece) => piece.pos === posA)!,
+                        destinationPos: posB,
+                    },
+                },
+            },
+            state,
+        );
     }
-
-    if (isEnPassant && enPassantablePawn) {
-        enPassantablePawn.remove();
-    }
-
-    state.FENPositions.push(getFEN());
 
     await checkIfGameOver(state, isChecking, pieceColor);
 
-    resetDraggedPieceStyles(state.draggedPiece);
-    state.draggedPiece = null;
+    if (state.isGameOver) resetBoard(state);
+
+    if (state.draggedPiece) {
+        resetDraggedPieceStyles(state.draggedPiece);
+        state.draggedPiece = null;
+    }
 
     return true;
 }
 
-export function handlePieceMovement() {
-    const state = initGameState();
-
-    const resetButton = document.getElementById(
-        "reset-button",
-    ) as HTMLButtonElement;
-
-    resetButton!.addEventListener("click", () => {
-        state.moveIdx = 0;
-        drawBoardfromFEN(INITIAL_POSITION);
-        state.FENPositions = [INITIAL_POSITION];
-    });
-
+export function handlePieceMovement(state: GameState) {
     document.addEventListener("mousedown", async (e) => {
         if ((e.target as HTMLElement).classList.contains("piece")) {
             state.draggedPiece = e.target as HTMLImageElement;
@@ -311,7 +307,7 @@ export function handlePieceMovement() {
             document.body.appendChild(state.draggedPiece);
             moveAt(state, e.pageX, e.pageY);
 
-            state.highlightedSquares = (await highlightMoves(state)) ?? [];
+            await highlightMoves(state);
         }
 
         document.addEventListener("mousemove", onMouseMove);
@@ -322,6 +318,8 @@ export function handlePieceMovement() {
 
         async function onMouseUp(e: MouseEvent) {
             let target = document.elementFromPoint(e.clientX, e.clientY)!;
+            if (!target) return;
+
             target = (
                 target.classList.contains("piece")
                     ? target.parentElement

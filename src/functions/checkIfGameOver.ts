@@ -1,9 +1,9 @@
-import { INITIAL_POSITION, MATE_SOUND } from "@constants";
+import { MATE_SOUND } from "@constants";
 import { Piece, PieceColor } from "@types";
 import { checkForCheckmate } from "@functions";
 import { countMaterials } from "@utils";
 import { Pieces } from "@enums";
-import { GameState } from "./handlePieceMovement";
+import { GameState } from "@interfaces";
 
 type GameEndReason = "checkmate" | "draw";
 type DrawReason =
@@ -64,7 +64,7 @@ export async function checkIfGameOver(
     });
 
     const noLegalMovesLeft = await checkForCheckmate(
-        state.moveIdx + 1,
+        state,
         pieceColor === "white" ? "black" : "white",
     );
 
@@ -113,8 +113,4 @@ export async function checkIfGameOver(
             }
         }
     }
-
-    if (state.isGameOver) state.FENPositions = [INITIAL_POSITION];
-    state.isGameOver = false;
-    state.moveIdx = 0;
 }

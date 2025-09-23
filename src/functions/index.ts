@@ -1,4 +1,4 @@
-export { drawBoardfromFEN } from "./drawBoardFromFEN";
+export { drawBoard } from "./drawBoard";
 export { handleBoardFlipping } from "./handleBoardFlipping";
 export { getPromotionSelection } from "./getPromotionSelection";
 export { checkLegality } from "./checkLegality";
@@ -9,3 +9,6 @@ export { checkForCheckmate } from "./checkForCheckmate";
 export { getFEN } from "./getFEN";
 export { checkIfGameOver } from "./checkIfGameOver";
 export { makeBotMove } from "./makeBotMove";
+export { turnFENToBoardArray } from "./turnFENtoBoardArray";
+export { initGameState } from "./initGameState";
+export { handleBoardResetting } from "./handleBoardResetting";

@@ -1,10 +1,17 @@
 import { INITIAL_POSITION } from "@constants";
 import {
     handlePieceMovement,
-    drawBoardfromFEN,
+    drawBoard,
     handleBoardFlipping,
+    turnFENToBoardArray,
+    initGameState,
+    handleBoardResetting,
 } from "@functions";
 
-drawBoardfromFEN(INITIAL_POSITION);
-handlePieceMovement();
-handleBoardFlipping(INITIAL_POSITION);
+const state = initGameState();
+
+turnFENToBoardArray(INITIAL_POSITION, state);
+drawBoard(state);
+handlePieceMovement(state);
+handleBoardFlipping(state);
+handleBoardResetting(state);

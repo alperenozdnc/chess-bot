@@ -6,3 +6,6 @@ export { undoMove } from "./undoMove";
 export { countMaterials } from "./countMaterials";
 export { simulate } from "./simulate";
 export { reverseColor } from "./reverseColor";
+export { updateBoard } from "./updateBoard";
+export { resetBoard } from "./resetBoard";
+export { resetGameState } from "./resetGameState";

@@ -22,8 +22,8 @@
             "@interfaces/*": ["./interfaces/*"],
             "@functions/*": ["./functions/*"],
             "@utils/*": ["./utils/*"],
-            "@maps/*": ["./utils/*"]
-            "@testing": ["./testing/*"],
+            "@maps/*": ["./utils/*"],
+            "@testing/*": ["./testing/*"]
         }
     },
     "include": ["src"]

@@ -1,4 +1,4 @@
-export function test(assertion: boolean, label: string) {
+export function test(assertion: boolean | (() => boolean), label: string) {
     if (!assertion) {
         console.log(`%c❌ FAILED: ${label}`, "color: red; font-weight: bold;");
         return;

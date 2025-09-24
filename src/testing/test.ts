@@ -1,9 +1,8 @@
-import { GREEN, RED, RESET } from "@constants";
-
 export function test(assertion: boolean, label: string) {
     if (!assertion) {
-        return console.error(`${RED}FAILED: ${label}${RESET}`);
+        console.log(`%c❌ FAILED: ${label}`, "color: red; font-weight: bold;");
+        return;
     }
 
-    console.log(`${GREEN}PASSED: ${label}${RESET}`);
+    console.log(`%c✅ PASSED: ${label}`, "color: green; font-weight: bold;");
 }

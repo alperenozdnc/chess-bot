@@ -13,3 +13,7 @@ export const MATE_SOUND = new Audio(
     "https://images.chesscomfiles.com/chess-themes/sounds/_WEBM_/default/game-end.webm",
 );
 export const BOARD = document.getElementById("board-wrapper") as HTMLDivElement;
+export const TEST_MODE = true;
+export const GREEN = "\x1b[32m";
+export const RED = "\x1b[31m";
+export const RESET = "\x1b[0m";

@@ -15,6 +15,7 @@
             "@functions": ["./functions/index.ts"],
             "@utils": ["./utils/index.ts"],
             "@maps": ["./maps/index.ts"],
+            "@testing": ["./testing/index.ts"],
             "@constants/*": ["./constants/*"],
             "@enums/*": ["./enums/*"],
             "@types/*": ["./types/*"],
@@ -22,6 +23,7 @@
             "@functions/*": ["./functions/*"],
             "@utils/*": ["./utils/*"],
             "@maps/*": ["./utils/*"]
+            "@testing": ["./testing/*"],
         }
     },
     "include": ["src"]

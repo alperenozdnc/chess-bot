@@ -3,7 +3,7 @@ export function test(assertion: boolean | (() => boolean), label: string) {
 
     if (typeof assertion !== "boolean") assertionVal = assertion();
 
-    if (!assertion) {
+    if (!assertionVal) {
         console.log(`%c❌ FAILED: ${label}`, "color: red; font-weight: bold;");
         return;
     }

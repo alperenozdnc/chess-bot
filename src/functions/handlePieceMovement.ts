@@ -1,4 +1,3 @@
-import { CAPTURE_SOUND, CHECK_SOUND, MOVE_SOUND } from "@constants";
 import { Piece, PieceColor } from "@types";
 import {
     checkTurn,
@@ -9,8 +8,10 @@ import {
 import {
     checkIfGameOver,
     checkLegality,
+    clearHighlights,
     getFEN,
     getPromotionSelection,
+    handleAudio,
     makeBotMove,
 } from "@functions";
 import { CastlingMap } from "@maps";
@@ -41,39 +42,6 @@ function isTargetWrong(
     } else if (!target) result = true;
 
     return result;
-}
-
-function clearHighlights(state: GameState) {
-    if (state.highlightedSquares.length > 0) {
-        for (const square of state.highlightedSquares) {
-            square.classList.remove("highlight", "capturable-highlight");
-        }
-
-        state.highlightedSquares = [];
-    }
-}
-
-function playSound(audio: HTMLAudioElement) {
-    if (!audio.paused) {
-        const clone = audio.cloneNode() as HTMLAudioElement;
-        clone.play();
-    } else {
-        audio.play();
-    }
-}
-
-function handleAudio(isCapturing: boolean, isChecking: boolean) {
-    if (isCapturing) {
-        if (!isChecking) {
-            playSound(CAPTURE_SOUND);
-        } else {
-            playSound(CHECK_SOUND);
-        }
-    } else if (isChecking) {
-        playSound(CHECK_SOUND);
-    } else {
-        playSound(MOVE_SOUND);
-    }
 }
 
 function mutateDrawCounters(

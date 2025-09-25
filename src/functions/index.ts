@@ -12,3 +12,4 @@ export { makeBotMove } from "./makeBotMove";
 export { turnFENToBoardArray } from "./turnFENtoBoardArray";
 export { initGameState } from "./initGameState";
 export { handleBoardResetting } from "./handleBoardResetting";
+export { highlightMoves } from "./highlightMoves";

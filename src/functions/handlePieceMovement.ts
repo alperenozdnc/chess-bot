@@ -11,43 +11,18 @@ import {
     checkLegality,
     getFEN,
     getPromotionSelection,
-    listLegalMoves,
     makeBotMove,
 } from "@functions";
 import { CastlingMap } from "@maps";
 import { GameState } from "@interfaces";
 import { Pieces } from "@enums";
 import { resetBoard } from "@utils";
+import { highlightMoves } from "@functions";
 
 function moveAt(state: GameState, pageX: number, pageY: number) {
     if (state.draggedPiece) {
         state.draggedPiece.style.left = `${pageX - state.offsetX}px`;
         state.draggedPiece.style.top = `${pageY - state.offsetY}px`;
-    }
-}
-
-async function highlightMoves(state: GameState) {
-    if (!state.draggedPiece || !state.originalSquare) return;
-
-    let pieceCanMove = checkTurn(
-        state.moveIdx,
-        state.draggedPiece.dataset.color! as PieceColor,
-    );
-
-    if (pieceCanMove) {
-        const legalMoves = await listLegalMoves({
-            state,
-        });
-
-        for (const legalMove of legalMoves) {
-            state.highlightedSquares.push(legalMove.square);
-
-            if (legalMove.isCapturing) {
-                legalMove.square.classList.add("capturable-highlight");
-            } else {
-                legalMove.square.classList.add("highlight");
-            }
-        }
     }
 }
 

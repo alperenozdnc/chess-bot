@@ -17,3 +17,4 @@ export { clearHighlights } from "./clearHighlights";
 export { handleAudio } from "./handleAudio";
 export { mutateDrawCounters } from "./mutateDrawCounters";
 export { makeMove } from "./makeMove";
+export { moveAt } from "./moveAt";

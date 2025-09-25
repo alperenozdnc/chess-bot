@@ -1,13 +1,5 @@
-import { makeBotMove, makeMove } from "@functions";
 import { GameState } from "@interfaces";
-import { highlightMoves } from "@functions";
-
-function moveAt(state: GameState, pageX: number, pageY: number) {
-    if (state.draggedPiece) {
-        state.draggedPiece.style.left = `${pageX - state.offsetX}px`;
-        state.draggedPiece.style.top = `${pageY - state.offsetY}px`;
-    }
-}
+import { highlightMoves, moveAt, makeBotMove, makeMove } from "@functions";
 
 export function handlePieceMovement(state: GameState) {
     document.addEventListener("mousedown", async (e) => {

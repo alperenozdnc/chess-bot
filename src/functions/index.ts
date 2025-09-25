@@ -18,3 +18,7 @@ export { handleAudio } from "./handleAudio";
 export { mutateDrawCounters } from "./mutateDrawCounters";
 export { makeMove } from "./makeMove";
 export { moveAt } from "./moveAt";
+export { onMouseMove } from "./onMouseMove";
+export { handleDragStart } from "./handleDragStart";
+export { handleDragEnd } from "./handleDragEnd";
+export { handleMouseMovement } from "./handleMouseMovement";

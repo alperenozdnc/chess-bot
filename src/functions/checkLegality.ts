@@ -42,6 +42,15 @@ export function checkForObstacles(
     return true;
 }
 
+const defaultRet = {
+    isMoveLegal: false,
+    isCapturing: false,
+    isPromoting: false,
+    isCastling: false,
+    isChecking: false,
+    isEnPassant: false,
+};
+
 export async function checkLegality(
     state: GameState,
     data: MoveData,
@@ -61,7 +70,7 @@ export async function checkLegality(
         (piece) => piece.pos === pieceElement.parentElement!.dataset.pos,
     );
 
-    if (!pieceObject && !isJustChecking) return;
+    if (!pieceObject && !isJustChecking) return defaultRet;
 
     let isMoveLegal = false;
 

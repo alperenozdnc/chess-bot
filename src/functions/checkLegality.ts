@@ -1,12 +1,13 @@
 import { isSquareAttacked } from "@functions";
 import { FILES } from "@constants";
 import { Pieces } from "@enums";
-import { GameState, MoveData, MoveLegality, SquareAndPiece } from "@interfaces";
-import { getSquareAndPieceFromPos, simulate } from "@utils";
+import { GameState, MoveLegality, PieceData } from "@interfaces";
+import { simulate } from "@utils";
 import { PieceColor } from "@types";
 import { CastlingMap } from "@maps";
 
 export function checkForObstacles(
+    state: GameState,
     directions: string[][],
     pos: string,
     color: PieceColor,
@@ -15,20 +16,18 @@ export function checkForObstacles(
     const allAvailableMoves: string[] = [];
 
     for (const direction of directions) {
-        for (const pos of direction) {
-            const { square, piece } = getSquareAndPieceFromPos(
-                pos,
-            ) as SquareAndPiece;
+        for (const pos2 of direction) {
+            const piece = state.Board.find((piece) => piece.pos === pos2);
 
-            if (square.hasChildNodes()) {
-                if (piece!.dataset.color !== color) {
-                    allAvailableMoves.push(pos);
+            if (piece) {
+                if (piece.color !== color) {
+                    allAvailableMoves.push(pos2);
                     break;
                 } else {
                     break;
                 }
             } else {
-                allAvailableMoves.push(pos);
+                allAvailableMoves.push(pos2);
             }
         }
     }
@@ -51,31 +50,24 @@ const defaultRet = {
     isEnPassant: false,
 };
 
+interface Data {
+    piece: PieceData;
+    destinationPos: string;
+    isJustChecking: boolean;
+}
+
 export async function checkLegality(
     state: GameState,
-    data: MoveData,
+    data: Data,
 ): Promise<MoveLegality> {
-    const {
-        ID,
-        color,
-        pieceMoveCount,
-        pieceElement,
-        startSquare,
-        destinationSquare,
-        moveIdx,
-        isJustChecking,
-    } = data;
+    const pieceObject = data.piece;
 
-    const pieceObject = state.Board.find(
-        (piece) => piece.pos === pieceElement.parentElement!.dataset.pos,
-    );
-
-    if (!pieceObject && !isJustChecking) return defaultRet;
+    if (!pieceObject && !data.isJustChecking) return defaultRet;
 
     let isMoveLegal = false;
 
-    const posA = startSquare.dataset.pos!;
-    const posB = destinationSquare.dataset.pos!;
+    const posA = data.piece.pos;
+    const posB = data.destinationPos;
 
     const fileA = FILES.indexOf(posA[0]);
     const fileB = FILES.indexOf(posB[0]);
@@ -87,18 +79,19 @@ export async function checkLegality(
     let isPromoting = false;
     let isCastling = false;
     let isEnPassant = false;
-    const enPassantablePawn = document.querySelector(
-        "[data-en_passant_move_idx]",
-    ) as HTMLImageElement;
+    const enPassantablePawn = state.Board.find(
+        (piece) => piece.enPassantMoveIdx,
+    );
+    const capturedPiece = state.Board.find(
+        (piece) => piece.pos === data.destinationPos,
+    );
 
-    if (destinationSquare.innerHTML !== "") {
-        const capturedPiece = destinationSquare.children[0] as HTMLImageElement;
-
-        if (color === capturedPiece.dataset.color) {
+    if (capturedPiece) {
+        if (data.piece.color === capturedPiece.color) {
             isMoveLegal = false;
         }
 
-        if (capturedPiece.dataset.pieceid === Pieces.King) {
+        if (capturedPiece.id === Pieces.King) {
             isMoveLegal = false;
         }
 
@@ -108,13 +101,13 @@ export async function checkLegality(
     const df = Math.abs(fileA - fileB);
     const dr = Math.abs(rankA - rankB);
 
-    switch (ID) {
+    switch (data.piece.id) {
         case Pieces.Pawn:
-            const direction = color === "white" ? 1 : -1;
-            const nextSquare = `${FILES[fileA]}${rankB - direction}`;
-            const nextSquareData = getSquareAndPieceFromPos(
-                nextSquare,
-            ) as SquareAndPiece;
+            const direction = data.piece.color === "white" ? 1 : -1;
+            const nextSquarePos = `${FILES[fileA]}${rankB - direction}`;
+            const nextSquareData = state.Board.find(
+                (piece) => piece.pos === nextSquarePos,
+            );
             let isDirectionRight = false;
 
             if (rankA < rankB && direction === 1) isDirectionRight = true;
@@ -123,57 +116,47 @@ export async function checkLegality(
             if (
                 dr == 2 &&
                 df === 0 &&
-                pieceMoveCount === 0 &&
+                data.piece.moveCount === 0 &&
                 isDirectionRight &&
-                nextSquareData &&
-                nextSquareData.square.children.length === 0
+                !nextSquareData
             )
                 isMoveLegal = true;
             if (isCapturing)
-                isMoveLegal = isSquareAttacked({
+                isMoveLegal = isSquareAttacked(state, {
                     pos: posB,
-                    attackerColor: color,
+                    attackerColor: data.piece.color,
                     piece: Pieces.Pawn,
                     attackerPos: posA,
                 });
-            if (color === "white" && rankB === 8) isPromoting = true;
-            if (color === "black" && rankB === 1) isPromoting = true;
+            if (data.piece.color === "white" && rankB === 8) isPromoting = true;
+            if (data.piece.color === "black" && rankB === 1) isPromoting = true;
 
-            if (enPassantablePawn && !isJustChecking) {
-                const enPassantData =
-                    enPassantablePawn.dataset.en_passant_move_idx;
+            if (enPassantablePawn && !data.isJustChecking) {
+                const enPassantData = enPassantablePawn.enPassantMoveIdx;
 
                 if (enPassantData) {
-                    if (moveIdx > +enPassantData) {
-                        delete enPassantablePawn.dataset.en_passant_move_idx;
-                        pieceObject.enPassantMoveIdx = undefined;
+                    if (state.moveIdx > +enPassantData) {
+                        enPassantablePawn.enPassantMoveIdx = undefined;
                     }
                 }
             }
 
             if (enPassantablePawn) {
-                const enPassantData =
-                    enPassantablePawn.dataset.en_passant_move_idx;
+                if (enPassantablePawn.enPassantMoveIdx) {
+                    if (state.moveIdx === +enPassantablePawn.enPassantMoveIdx) {
+                        const posData = enPassantablePawn.pos;
 
-                if (enPassantData) {
-                    if (moveIdx === +enPassantData) {
-                        const enPassantablePawnSquare =
-                            enPassantablePawn.parentNode as HTMLDivElement;
+                        if (posData) {
+                            const f = FILES.indexOf(posData[0]);
+                            const r =
+                                +posData[1] +
+                                (data.piece.color === "white" ? 1 : -1);
 
-                        if (enPassantablePawnSquare) {
-                            const posData = enPassantablePawnSquare.dataset.pos;
-
-                            if (posData) {
-                                const f = FILES.indexOf(posData[0]);
-                                const r =
-                                    +posData[1] + (color === "white" ? 1 : -1);
-
-                                if (Math.abs(rankA - r) === 1) {
-                                    if (f === fileB && rankB === r) {
-                                        isMoveLegal = true;
-                                        isCapturing = true;
-                                        isEnPassant = true;
-                                    }
+                            if (Math.abs(rankA - r) === 1 && df === 1) {
+                                if (f === fileB && rankB === r) {
+                                    isMoveLegal = true;
+                                    isCapturing = true;
+                                    isEnPassant = true;
                                 }
                             }
                         }
@@ -181,46 +164,42 @@ export async function checkLegality(
                 }
             }
 
-            if (dr === 2 && !isJustChecking) {
-                pieceElement.dataset.en_passant_move_idx = (
-                    moveIdx + 1
-                ).toString();
-
-                pieceObject.enPassantMoveIdx = moveIdx + 1;
+            if (dr === 2 && !data.isJustChecking) {
+                pieceObject.enPassantMoveIdx = state.moveIdx + 1;
             }
 
             break;
         case Pieces.Knight:
-            isMoveLegal = isSquareAttacked({
+            isMoveLegal = isSquareAttacked(state, {
                 pos: posB,
-                attackerColor: color,
+                attackerColor: data.piece.color,
                 piece: Pieces.Knight,
                 attackerPos: posA,
             });
 
             break;
         case Pieces.Bishop:
-            isMoveLegal = isSquareAttacked({
+            isMoveLegal = isSquareAttacked(state, {
                 pos: posB,
-                attackerColor: color,
+                attackerColor: data.piece.color,
                 piece: Pieces.Bishop,
                 attackerPos: posA,
             });
 
             break;
         case Pieces.Rook:
-            isMoveLegal = isSquareAttacked({
+            isMoveLegal = isSquareAttacked(state, {
                 pos: posB,
-                attackerColor: color,
+                attackerColor: data.piece.color,
                 piece: Pieces.Rook,
                 attackerPos: posA,
             });
 
             break;
         case Pieces.Queen:
-            isMoveLegal = isSquareAttacked({
+            isMoveLegal = isSquareAttacked(state, {
                 pos: posB,
-                attackerColor: color,
+                attackerColor: data.piece.color,
                 piece: Pieces.Queen,
                 attackerPos: posA,
             });
@@ -233,22 +212,22 @@ export async function checkLegality(
                 castlingPieces: string[],
             ): boolean {
                 const emptySquares = checkForObstacles(
+                    state,
                     [castlingPieces],
                     pos,
-                    color,
+                    data.piece.color,
                     true,
                 ) as string[];
                 const rookPos = castlingPieces[castlingPieces.length - 1];
 
                 // .length - 1 is accounting for the rook here
                 if (emptySquares.length === castlingPieces.length - 1) {
-                    const rookSquare = document.querySelector(
-                        `[data-pos=${rookPos}]`,
-                    )!;
-                    const piece = rookSquare.querySelector("img");
+                    const piece = state.Board.find(
+                        (piece) => piece.pos === rookPos,
+                    );
 
-                    if (piece && piece.dataset.pieceid === Pieces.Rook) {
-                        if (piece.dataset.move_count === "0") {
+                    if (piece && piece.id === Pieces.Rook) {
+                        if (piece.moveCount === 0) {
                             return true;
                         }
                     }
@@ -257,7 +236,7 @@ export async function checkLegality(
                 return false;
             }
 
-            if (pieceMoveCount === 0) {
+            if (data.piece.moveCount === 0) {
                 for (let sqr of CastlingMap.keys()) {
                     let dir = CastlingMap.get(sqr);
 
@@ -276,9 +255,9 @@ export async function checkLegality(
                     isMoveLegal = false;
                 }
             } else {
-                isMoveLegal = isSquareAttacked({
+                isMoveLegal = isSquareAttacked(state, {
                     pos: posB,
-                    attackerColor: color,
+                    attackerColor: data.piece.color,
                     piece: Pieces.King,
                     attackerPos: posA,
                 });
@@ -287,40 +266,37 @@ export async function checkLegality(
             break;
     }
 
-    const kings = Array.from(document.querySelectorAll(`[data-pieceid=k]`));
-    const king = kings.filter(
-        (king) => (king as HTMLImageElement).dataset.color === color,
-    )[0] as HTMLImageElement;
-    const enemyKingPos = (
-        kings.filter(
-            (king) => (king as HTMLImageElement).dataset.color !== color,
-        )[0] as HTMLImageElement
-    ).parentElement!.dataset.pos;
+    const king = state.Board.find(
+        (piece) => piece.id === "k" && piece.color === data.piece.color,
+    )!;
 
-    const kingPos = king.parentElement!.dataset.pos!;
-    let isCheck = isSquareAttacked({
-        pos: kingPos,
-        attackerColor: color === "white" ? "black" : "white",
+    const enemyKing = state.Board.find(
+        (piece) => piece.id === "k" && piece.color !== data.piece.color,
+    )!;
+
+    let isCheck = isSquareAttacked(state, {
+        pos: king.pos,
+        attackerColor: data.piece.color === "white" ? "black" : "white",
     });
-    const destinationElement = destinationSquare.firstChild!;
+
     const move = simulate(
-        pieceElement,
-        destinationElement as HTMLImageElement,
+        state,
+        pieceObject,
+        data.destinationPos,
         isCapturing,
         isEnPassant,
-        destinationSquare,
-        startSquare,
     );
 
     move.play();
 
-    const isChecking = isSquareAttacked({
-        pos: enemyKingPos as string,
-        attackerColor: color,
+    const isChecking = isSquareAttacked(state, {
+        pos: enemyKing.pos,
+        attackerColor: data.piece.color,
     });
-    isCheck = isSquareAttacked({
-        pos: ID === Pieces.King ? posB : kingPos,
-        attackerColor: color === "white" ? "black" : "white",
+
+    isCheck = isSquareAttacked(state, {
+        pos: data.piece.id === Pieces.King ? posB : king.pos,
+        attackerColor: data.piece.color === "white" ? "black" : "white",
     });
 
     move.unplay();
@@ -334,6 +310,6 @@ export async function checkLegality(
         isCastling,
         isEnPassant,
         isChecking,
-        enPassantablePawn,
+        enPassantablePawnPos: enPassantablePawn?.pos ?? undefined,
     };
 }

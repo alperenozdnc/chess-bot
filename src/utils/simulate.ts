@@ -1,22 +1,35 @@
+import { GameState, PieceData } from "@interfaces";
+
 export function simulate(
-    pieceElement: HTMLImageElement,
-    destinationPieceElement: HTMLImageElement,
+    state: GameState,
+    piece: PieceData,
+    destinationPos: string,
     isCapturing: boolean,
     isEnPassant: boolean,
-    destinationSquare: HTMLDivElement,
-    startSquare: HTMLDivElement,
 ) {
+    const originalPos = piece.pos;
+    let capturedPiece: PieceData | undefined;
+
     function play() {
-        pieceElement.remove();
-        if (isCapturing && !isEnPassant) destinationSquare.innerHTML = "";
-        destinationSquare.appendChild(pieceElement);
+        piece.pos = destinationPos;
+
+        if (isCapturing && !isEnPassant) {
+            capturedPiece = state.Board.find((p) => p.pos === destinationPos)!;
+
+            state.Board.splice(state.Board.indexOf(capturedPiece), 1);
+        }
+
+        piece.moveCount += 1;
     }
 
     function unplay() {
-        pieceElement.remove();
-        if (isCapturing && !isEnPassant)
-            destinationSquare.appendChild(destinationPieceElement);
-        startSquare.appendChild(pieceElement);
+        piece.pos = originalPos;
+
+        if (isCapturing && !isEnPassant && capturedPiece) {
+            state.Board.push(capturedPiece);
+        }
+
+        piece.moveCount -= 1;
     }
 
     return { play, unplay };

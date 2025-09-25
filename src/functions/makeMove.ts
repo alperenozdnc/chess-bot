@@ -69,15 +69,10 @@ export async function makeMove(
         isCastling,
         isEnPassant,
         isChecking,
-        enPassantablePawn,
+        enPassantablePawnPos,
     } = await checkLegality(state, {
-        ID: pieceid.toLowerCase() as Piece,
-        color: pieceColor,
-        pieceElement: state.draggedPiece,
-        pieceMoveCount: pieceObject!.moveCount,
-        startSquare: state.originalSquare!,
-        destinationSquare: target as HTMLDivElement,
-        moveIdx: state.moveIdx,
+        piece: pieceObject!,
+        destinationPos: target.dataset.pos!,
         isJustChecking: false,
     });
 
@@ -134,8 +129,7 @@ export async function makeMove(
                                 piece.pos ===
                                 (!isEnPassant
                                     ? target.dataset.pos
-                                    : enPassantablePawn?.parentElement!.dataset
-                                        .pos),
+                                    : enPassantablePawnPos),
                         )!,
                         isEnPassant,
                     },

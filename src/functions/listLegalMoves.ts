@@ -1,4 +1,3 @@
-import { Piece } from "@types";
 import { checkLegality } from "@functions";
 import { GameState, LegalMoveData } from "@interfaces";
 
@@ -21,7 +20,6 @@ export async function listLegalMoves({
         if (square === state.originalSquare) continue;
         if (!state.draggedPiece) break;
 
-        let pieceid = state.draggedPiece.dataset.pieceid!.toUpperCase();
         const pieceObject = state.Board.find(
             (piece) => piece.pos === state.originalSquare!.dataset.pos,
         );
@@ -29,13 +27,8 @@ export async function listLegalMoves({
         if (!pieceObject) continue;
 
         const { isMoveLegal, isCapturing } = await checkLegality(state, {
-            ID: pieceid.toLowerCase() as Piece,
-            color: pieceObject.color,
-            pieceElement: state.draggedPiece,
-            pieceMoveCount: pieceObject!.moveCount,
-            startSquare: state.originalSquare!,
-            destinationSquare: square,
-            moveIdx: state.moveIdx,
+            piece: pieceObject,
+            destinationPos: square.dataset.pos!,
             isJustChecking: true,
         });
 

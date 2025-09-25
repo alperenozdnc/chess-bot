@@ -5,5 +5,5 @@ export interface MoveLegality {
     isCastling: boolean;
     isChecking: boolean;
     isEnPassant: boolean;
-    enPassantablePawn?: HTMLImageElement;
+    enPassantablePawnPos?: string;
 }

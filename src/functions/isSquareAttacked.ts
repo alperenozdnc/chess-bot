@@ -1,6 +1,6 @@
 import { FILES } from "@constants";
 import { Pieces } from "@enums";
-import { SquareAndPiece } from "@interfaces";
+import { GameState, SquareAndPiece } from "@interfaces";
 import { Piece, PieceColor } from "@types";
 import { getSquareAndPieceFromPos } from "@utils";
 import { checkForObstacles } from "./checkLegality";
@@ -14,7 +14,7 @@ interface Data {
 
 interface Position {
     rank: number;
-    file: number
+    file: number;
 }
 
 export function findFileIdxFromLetter(file: string): number {
@@ -88,37 +88,33 @@ function generateRookDirections(pos: Position): string[][] {
     return [up, down, left, right];
 }
 
-export function isSquareAttacked(data: Data): boolean {
+export function isSquareAttacked(state: GameState, data: Data): boolean {
     const { pos: attackedPos, attackerColor, piece, attackerPos } = data;
-    const squareData = getSquareAndPieceFromPos(attackedPos) as SquareAndPiece;
+    const attackedPiece = state.Board.find((p) => p.pos === attackedPos);
 
-    if (!squareData) return false;
-    if (!squareData.square) return false;
-
-    const { piece: attackedPiece } = squareData;
-
-    if (attackerColor === attackedPiece?.dataset.color) return false;
+    if (attackerColor === attackedPiece?.color) return false;
 
     const attacked = {
         file: findFileIdxFromLetter(attackedPos[0]),
-        rank: rankToIndex(+attackedPos[1])
+        rank: rankToIndex(+attackedPos[1]),
     };
 
     for (const attackerFile of FILES) {
         for (let attackerRank = 1; attackerRank <= 8; ++attackerRank) {
             const attackerPosString = `${attackerFile}${attackerRank}`;
-            const attackerData = getSquareAndPieceFromPos(attackerPosString) as SquareAndPiece;
+            const attackerPiece = state.Board.find(
+                (p) => p.pos === attackerPosString,
+            );
 
-            if (!attackerData.square || !attackerData.piece) continue;
-            if (attackerData.piece.dataset.color !== attackerColor) continue;
+            if (!attackerPiece) continue;
+            if (attackerPiece.color !== attackerColor) continue;
 
             const attacker = {
                 file: findFileIdxFromLetter(attackerFile),
-                rank: rankToIndex(attackerRank)
+                rank: rankToIndex(attackerRank),
             };
 
-            const { piece: attackerPiece } = attackerData;
-            const attackerId = attackerPiece.dataset.pieceid;
+            const attackerId = attackerPiece.id;
 
             const deltaFile = Math.abs(attacked.file - attacker.file);
             const deltaRank = Math.abs(attacked.rank - attacker.rank);
@@ -147,17 +143,37 @@ export function isSquareAttacked(data: Data): boolean {
             }
 
             if (attackerId === Pieces.Knight) {
-                if ((deltaRank === 1 && deltaFile === 2) || (deltaFile === 1 && deltaRank === 2)) return true;
+                if (
+                    (deltaRank === 1 && deltaFile === 2) ||
+                    (deltaFile === 1 && deltaRank === 2)
+                )
+                    return true;
             }
 
             if (attackerId === Pieces.Bishop) {
                 const directions = generateBishopDirections(attacker);
-                if (checkForObstacles(directions, attackedPos, attackerColor) as boolean) return true;
+                if (
+                    checkForObstacles(
+                        state,
+                        directions,
+                        attackedPos,
+                        attackerColor,
+                    ) as boolean
+                )
+                    return true;
             }
 
             if (attackerId === Pieces.Rook) {
                 const directions = generateRookDirections(attacker);
-                if (checkForObstacles(directions, attackedPos, attackerColor) as boolean) return true;
+                if (
+                    checkForObstacles(
+                        state,
+                        directions,
+                        attackedPos,
+                        attackerColor,
+                    ) as boolean
+                )
+                    return true;
             }
 
             if (attackerId === Pieces.Queen) {
@@ -165,13 +181,23 @@ export function isSquareAttacked(data: Data): boolean {
                 const rookDirs = generateRookDirections(attacker);
 
                 if (
-                    (checkForObstacles(bishopDirs, attackedPos, attackerColor) as boolean) ||
-                    (checkForObstacles(rookDirs, attackedPos, attackerColor) as boolean)
-                ) return true;
+                    (checkForObstacles(
+                        state,
+                        bishopDirs,
+                        attackedPos,
+                        attackerColor,
+                    ) as boolean) ||
+                    (checkForObstacles(
+                        state,
+                        rookDirs,
+                        attackedPos,
+                        attackerColor,
+                    ) as boolean)
+                )
+                    return true;
             }
         }
     }
 
     return false;
 }
-

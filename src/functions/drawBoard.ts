@@ -3,6 +3,11 @@ import { GameState, SquareAndPiece } from "@interfaces";
 import { createPiece, getSquareAndPieceFromPos } from "@utils";
 
 export function drawBoard(state: GameState) {
+    if (state.draggedPiece) {
+        state.draggedPiece.remove();
+        state.draggedPiece = null;
+    }
+
     BOARD.innerHTML = "";
 
     let squareColor = 0;

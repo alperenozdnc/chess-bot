@@ -1,6 +1,5 @@
 import { BOARD } from "@constants";
-import { makeMove } from "./handlePieceMovement";
-import { listLegalMoves } from "@functions";
+import { makeMove, listLegalMoves } from "@functions";
 import { GameState } from "@interfaces";
 
 export async function makeBotMove(state: GameState) {

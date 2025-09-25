@@ -15,3 +15,5 @@ export { handleBoardResetting } from "./handleBoardResetting";
 export { highlightMoves } from "./highlightMoves";
 export { clearHighlights } from "./clearHighlights";
 export { handleAudio } from "./handleAudio";
+export { mutateDrawCounters } from "./mutateDrawCounters";
+export { makeMove } from "./makeMove";

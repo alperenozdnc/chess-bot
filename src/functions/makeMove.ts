@@ -70,7 +70,7 @@ export async function makeMove(
         isEnPassant,
         isChecking,
         enPassantablePawn,
-    } = await checkLegality({
+    } = await checkLegality(state, {
         ID: pieceid.toLowerCase() as Piece,
         color: pieceColor,
         pieceElement: state.draggedPiece,
@@ -130,16 +130,14 @@ export async function makeMove(
                         piece: pieceObject,
                         destinationPos: target.dataset.pos,
                         capturedPiece: state.Board.find(
-                            (piece) => piece.pos === target.dataset.pos,
+                            (piece) =>
+                                piece.pos ===
+                                (!isEnPassant
+                                    ? target.dataset.pos
+                                    : enPassantablePawn?.parentElement!.dataset
+                                        .pos),
                         )!,
                         isEnPassant,
-                        enPassantAblePawn: isEnPassant
-                            ? state.Board.find(
-                                (piece) =>
-                                    piece.pos ===
-                                    enPassantablePawn!.dataset.pos,
-                            )
-                            : undefined,
                     },
                 },
                 state,

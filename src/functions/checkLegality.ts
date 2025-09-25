@@ -1,7 +1,7 @@
 import { isSquareAttacked } from "@functions";
 import { FILES } from "@constants";
 import { Pieces } from "@enums";
-import { MoveData, MoveLegality, SquareAndPiece } from "@interfaces";
+import { GameState, MoveData, MoveLegality, SquareAndPiece } from "@interfaces";
 import { getSquareAndPieceFromPos, simulate } from "@utils";
 import { PieceColor } from "@types";
 import { CastlingMap } from "@maps";
@@ -42,7 +42,10 @@ export function checkForObstacles(
     return true;
 }
 
-export async function checkLegality(data: MoveData): Promise<MoveLegality> {
+export async function checkLegality(
+    state: GameState,
+    data: MoveData,
+): Promise<MoveLegality> {
     const {
         ID,
         color,
@@ -53,6 +56,12 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
         moveIdx,
         isJustChecking,
     } = data;
+
+    const pieceObject = state.Board.find(
+        (piece) => piece.pos === pieceElement.parentElement!.dataset.pos,
+    );
+
+    if (!pieceObject && !isJustChecking) return;
 
     let isMoveLegal = false;
 
@@ -128,6 +137,7 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
                 if (enPassantData) {
                     if (moveIdx > +enPassantData) {
                         delete enPassantablePawn.dataset.en_passant_move_idx;
+                        pieceObject.enPassantMoveIdx = undefined;
                     }
                 }
             }
@@ -166,6 +176,8 @@ export async function checkLegality(data: MoveData): Promise<MoveLegality> {
                 pieceElement.dataset.en_passant_move_idx = (
                     moveIdx + 1
                 ).toString();
+
+                pieceObject.enPassantMoveIdx = moveIdx + 1;
             }
 
             break;

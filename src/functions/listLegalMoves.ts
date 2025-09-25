@@ -28,7 +28,7 @@ export async function listLegalMoves({
 
         if (!pieceObject) continue;
 
-        const { isMoveLegal, isCapturing } = await checkLegality({
+        const { isMoveLegal, isCapturing } = await checkLegality(state, {
             ID: pieceid.toLowerCase() as Piece,
             color: pieceObject.color,
             pieceElement: state.draggedPiece,

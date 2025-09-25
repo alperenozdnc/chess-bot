@@ -12,7 +12,6 @@ interface Move extends ActionData { }
 interface Capture extends ActionData {
     capturedPiece: PieceData;
     isEnPassant?: boolean;
-    enPassantAblePawn?: PieceData;
 }
 
 interface Promote extends ActionData {
@@ -39,16 +38,6 @@ export function updateBoard(action: ActionTypeRequirements, state: GameState) {
         (piece) => piece.pos === (data as ActionData).destinationPos,
     );
 
-    function checkOverlapping(data: Capture | Promote) {
-        if (overlappingElement) return true;
-
-        console.error(
-            `cant perform CAPTURE on piece ${data.piece.id} to ${data.destinationPos} which is not occupied.`,
-        );
-
-        return false;
-    }
-
     switch (type) {
         case "MOVE": {
             if (overlappingElement) {
@@ -59,21 +48,13 @@ export function updateBoard(action: ActionTypeRequirements, state: GameState) {
             }
 
             data.piece.pos = data.destinationPos;
-            data.piece.moveCount += 1;
 
             break;
         }
         case "CAPTURE": {
-            if (!checkOverlapping(data)) return;
+            if (!overlappingElement && !data.isEnPassant) return;
 
             state.Board.splice(state.Board.indexOf(data.capturedPiece), 1);
-            if (data.isEnPassant && data.enPassantAblePawn) {
-                state.Board.splice(
-                    state.Board.indexOf(data.enPassantAblePawn),
-                    1,
-                );
-            }
-
             data.piece.pos = data.destinationPos;
             data.piece.moveCount += 1;
 
@@ -88,7 +69,7 @@ export function updateBoard(action: ActionTypeRequirements, state: GameState) {
             break;
         }
         case "PROMOTE": {
-            if (data.isCapturing && !checkOverlapping(data)) return;
+            if (data.isCapturing && !overlappingElement) return;
             if (data.isCapturing && data.capturedPiece) {
                 state.Board.splice(state.Board.indexOf(data.capturedPiece), 1);
             }

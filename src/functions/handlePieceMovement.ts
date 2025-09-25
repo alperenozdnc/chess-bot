@@ -288,6 +288,8 @@ export async function makeMove(
         state.draggedPiece = null;
     }
 
+    console.table(state.Board);
+
     return true;
 }
 

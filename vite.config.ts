@@ -16,7 +16,6 @@ export default defineConfig({
             "@functions": resolve(__dirname, "src/functions"),
             "@utils": resolve(__dirname, "src/utils"),
             "@maps": resolve(__dirname, "src/maps"),
-            "@testing": resolve(__dirname, "src/testing"),
         },
     },
     server: {

@@ -1,8 +1,7 @@
 import { FILES } from "@constants";
 import { Pieces } from "@enums";
-import { GameState, SquareAndPiece } from "@interfaces";
+import { GameState } from "@interfaces";
 import { Piece, PieceColor } from "@types";
-import { getSquareAndPieceFromPos } from "@utils";
 import { checkForObstacles } from "./checkLegality";
 
 interface Data {

@@ -1,3 +1,6 @@
+import { Pieces } from "@enums";
+import { GameState } from "@interfaces";
+
 enum Values {
     "p" = 1,
     "n" = 3,
@@ -6,21 +9,16 @@ enum Values {
     "q" = 9,
 }
 
-export function countMaterials() {
-    const pieces = Array.from(
-        document.querySelectorAll("[data-color]"),
-    ) as HTMLImageElement[];
+export function countMaterials(state: GameState) {
     let white = 0;
     let black = 0;
 
-    for (const piece of pieces) {
-        const pieceId = piece.dataset.pieceid;
+    for (const piece of state.Board) {
+        if (piece.id === Pieces.King) continue;
 
-        if (pieceId === "k") continue;
+        const value = piece.id as keyof typeof Values;
 
-        const value = pieceId as keyof typeof Values;
-
-        if (piece.dataset.color === "white") {
+        if (piece.color === "white") {
             white += Values[value];
         } else {
             black += Values[value];

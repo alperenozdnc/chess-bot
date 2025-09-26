@@ -68,7 +68,7 @@ export async function checkIfGameOver(
         pieceColor === "white" ? "black" : "white",
     );
 
-    const { white, black } = countMaterials();
+    const { white, black } = countMaterials(state);
 
     if (isChecking && noLegalMovesLeft) {
         state.isGameOver = true;

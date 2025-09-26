@@ -42,7 +42,8 @@ export function updateBoard(action: ActionTypeRequirements, state: GameState) {
         case "MOVE": {
             if (overlappingElement) {
                 console.error(
-                    `cant perform MOVE on piece ${data.piece.id} to ${data.destinationPos} which is already occupied.`,
+                    `cant perform MOVE on piece ${data.piece.id}
+                    to ${data.destinationPos} which is already occupied.`,
                 );
                 return;
             }

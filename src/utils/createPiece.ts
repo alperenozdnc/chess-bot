@@ -15,7 +15,6 @@ export function createPiece(data: PieceData): void {
     imageElement.height = h;
     imageElement.dataset.color = color;
     imageElement.dataset.pieceid = id;
-    (imageElement.dataset.move_count as unknown as number) = 0;
     imageElement.className = "piece";
     imageElement.draggable = false;
 

@@ -8,10 +8,14 @@ import {
     handleBoardResetting,
 } from "@functions";
 
-const state = initGameState();
+function game() {
+    const state = initGameState();
 
-turnFENToBoardArray(INITIAL_POSITION, state);
-drawBoard(state);
-handlePieceMovement(state);
-handleBoardFlipping(state);
-handleBoardResetting(state);
+    turnFENToBoardArray(INITIAL_POSITION, state);
+    drawBoard(state);
+    handlePieceMovement(state);
+    handleBoardFlipping(state);
+    handleBoardResetting(state);
+}
+
+game();

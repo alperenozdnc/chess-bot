@@ -1,4 +1,4 @@
 export interface LegalMoveData {
-    square: HTMLDivElement;
+    pos: string;
     isCapturing: boolean;
 }

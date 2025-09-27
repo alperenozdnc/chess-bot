@@ -1,29 +1,28 @@
 import { GameState } from "@interfaces";
-import { PieceColor } from "@types";
 import { checkTurn } from "@utils";
 import { listLegalMoves } from "./listLegalMoves";
 
 export async function highlightMoves(state: GameState) {
-    if (!state.draggedPiece || !state.originalSquare) return;
-
-    let pieceCanMove = checkTurn(
-        state.moveIdx,
-        state.draggedPiece.dataset.color! as PieceColor,
+    const piece = state.Board.find(
+        (p) => p.pos === state.originalSquare!.dataset.pos,
     );
 
-    if (pieceCanMove) {
-        const legalMoves = await listLegalMoves({
-            state,
-        });
+    if (!piece) return;
+    if (!checkTurn(state.moveIdx, piece.color)) return;
 
-        for (const legalMove of legalMoves) {
-            state.highlightedSquares.push(legalMove.square);
+    const moves = await listLegalMoves(state, piece);
 
-            if (legalMove.isCapturing) {
-                legalMove.square.classList.add("capturable-highlight");
-            } else {
-                legalMove.square.classList.add("highlight");
-            }
+    for (const move of moves) {
+        const square = document.querySelector(
+            `[data-pos="${move.pos}"]`,
+        )! as HTMLDivElement;
+
+        state.highlightedSquares.push(square);
+
+        if (move.isCapturing) {
+            square.classList.add("capturable-highlight");
+        } else {
+            square.classList.add("highlight");
         }
     }
 }

@@ -1,49 +1,19 @@
-import { FILES } from "@constants";
-import { makeMove, listLegalMoves } from "@functions";
+import { makeMove, findBestMove } from "@functions";
 import { GameState } from "@interfaces";
 
 export async function makeBotMove(state: GameState) {
-    const allLegalMoves = [];
-
-    for (const file of FILES) {
-        for (let rank = 1; rank <= 8; rank++) {
-            const piece = state.Board.find((p) => p.pos === file + rank);
-            if (!piece) continue;
-            if (piece.color !== state.botColor) continue;
-
-            const startSquare = document.querySelector(
-                `[data-pos="${piece.pos}"]`,
-            ) as HTMLDivElement;
-
-            const moves = await listLegalMoves(state, piece, true);
-
-            for (const move of moves) {
-                const destinationSquare = document.querySelector(
-                    `[data-pos="${move.pos}"]`,
-                ) as HTMLDivElement;
-
-                allLegalMoves.push({
-                    piece: piece,
-                    startSquare,
-                    square: destinationSquare,
-                });
-            }
-        }
-    }
-
-    const move =
-        allLegalMoves[Math.floor(Math.random() * allLegalMoves.length)];
+    const move = await findBestMove(state);
 
     if (!move) return;
 
-    const startSquare = document.querySelector(
-        `[data-pos="${move.piece.pos}"]`,
+    state.originalSquare = move.startSquare;
+    state.draggedPiece = state.originalSquare.firstChild as HTMLImageElement;
+
+    const target = document.querySelector(
+        `[data-pos="${move.pos}"]`,
     ) as HTMLDivElement;
 
-    state.draggedPiece = startSquare.firstChild as HTMLImageElement;
-    state.originalSquare = startSquare;
-
-    await makeMove(state, move.square, true);
+    await makeMove(state, target, true);
 
     state.draggedPiece = null;
     state.originalSquare = undefined;

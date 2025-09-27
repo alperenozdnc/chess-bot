@@ -23,3 +23,4 @@ export { handleDragStart } from "./handleDragStart";
 export { handleDragEnd } from "./handleDragEnd";
 export { handleMouseMovement } from "./handleMouseMovement";
 export { evaluate } from "./evaluate";
+export { listAllLegalMoves } from "./listAllLegalMoves";

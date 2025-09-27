@@ -4,11 +4,11 @@ import { PieceColor } from "@types";
 
 import { listLegalMoves } from "@functions";
 
-export async function listAllLegalMoves(
+export function listAllLegalMoves(
     state: GameState,
     color: PieceColor,
     makeDOMLookup: boolean,
-): Promise<(LegalMoveData | LegalMoveDataWithDOM)[]> {
+): LegalMoveData[] | LegalMoveDataWithDOM[] {
     const allMoves = [];
 
     for (const file of FILES) {
@@ -17,7 +17,7 @@ export async function listAllLegalMoves(
             if (!piece) continue;
             if (piece.color !== color) continue;
 
-            const moves = await listLegalMoves(state, piece);
+            const moves = listLegalMoves(state, piece);
 
             for (const move of moves) {
                 if (makeDOMLookup) {
@@ -30,7 +30,7 @@ export async function listAllLegalMoves(
                     continue;
                 }
 
-                allMoves.push(move);
+                allMoves.push({ ...move });
             }
         }
     }

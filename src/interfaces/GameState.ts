@@ -15,4 +15,6 @@ export interface GameState {
     movesSinceCapture: number;
     isBoardFlipped: boolean;
     isGameOver: boolean;
+    kingPos?: string;
+    enemyKingPos?: string;
 }

@@ -1,28 +1,33 @@
-import { BOARD } from "@constants";
+import { FILES } from "@constants";
 import { makeMove, listLegalMoves } from "@functions";
 import { GameState } from "@interfaces";
 
 export async function makeBotMove(state: GameState) {
-    const pieces = Array.from(
-        BOARD.querySelectorAll(`[data-color="${state.botColor}"]`),
-    ) as HTMLImageElement[];
-
     const allLegalMoves = [];
 
-    for (const botPiece of pieces) {
-        const startSquare = botPiece.parentElement as HTMLDivElement;
+    for (const file of FILES) {
+        for (let rank = 1; rank <= 8; rank++) {
+            const piece = state.Board.find((p) => p.pos === file + rank);
+            if (!piece) continue;
+            if (piece.color !== state.botColor) continue;
 
-        state.originalSquare = startSquare;
-        state.draggedPiece = botPiece;
+            const startSquare = document.querySelector(
+                `[data-pos="${piece.pos}"]`,
+            ) as HTMLDivElement;
 
-        const legalMoves = await listLegalMoves({ state });
+            const moves = await listLegalMoves(state, piece, true);
 
-        for (const move of legalMoves) {
-            allLegalMoves.push({
-                piece: botPiece,
-                startSquare,
-                square: move.square,
-            });
+            for (const move of moves) {
+                const destinationSquare = document.querySelector(
+                    `[data-pos="${move.pos}"]`,
+                ) as HTMLDivElement;
+
+                allLegalMoves.push({
+                    piece: piece,
+                    startSquare,
+                    square: destinationSquare,
+                });
+            }
         }
     }
 
@@ -31,8 +36,12 @@ export async function makeBotMove(state: GameState) {
 
     if (!move) return;
 
-    state.draggedPiece = move.piece;
-    state.originalSquare = move.startSquare;
+    const startSquare = document.querySelector(
+        `[data-pos="${move.piece.pos}"]`,
+    ) as HTMLDivElement;
+
+    state.draggedPiece = startSquare.firstChild as HTMLImageElement;
+    state.originalSquare = startSquare;
 
     await makeMove(state, move.square, true);
 

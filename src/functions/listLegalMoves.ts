@@ -2,10 +2,10 @@ import { FILES } from "@constants";
 import { checkLegality } from "@functions";
 import { GameState, LegalMoveData, PieceData } from "@interfaces";
 
-export async function listLegalMoves(
+export function listLegalMoves(
     state: GameState,
     piece: PieceData,
-): Promise<LegalMoveData[]> {
+): LegalMoveData[] {
     let moves: LegalMoveData[] = [];
 
     for (const file of FILES) {
@@ -14,14 +14,29 @@ export async function listLegalMoves(
 
             if (pos === piece.pos) continue;
 
-            const { isMoveLegal, isCapturing } = await checkLegality(state, {
+            const {
+                isMoveLegal,
+                isCastling,
+                isPromoting,
+                isCapturing,
+                isEnPassant,
+                enPassantablePawnPos,
+            } = checkLegality(state, {
                 piece: piece,
                 destinationPos: pos,
                 isJustChecking: true,
             });
 
             if (isMoveLegal) {
-                moves.push({ pos, isCapturing });
+                moves.push({
+                    pos,
+                    isCapturing,
+                    piece,
+                    isCastling,
+                    isPromoting,
+                    isEnPassant,
+                    enPassantablePawnPos,
+                });
             }
         }
     }

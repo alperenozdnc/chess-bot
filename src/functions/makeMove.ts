@@ -3,6 +3,7 @@ import {
     checkIfGameOver,
     checkLegality,
     clearHighlights,
+    drawBoard,
     getFEN,
     getPromotionSelection,
     handleAudio,
@@ -56,7 +57,6 @@ export async function makeMove(
         resetDraggedPieceStyles(state.draggedPiece);
         return;
     }
-
     let pieceid = state.draggedPiece.dataset.pieceid!.toUpperCase();
     const pieceObject = state.Board.find(
         (piece) => piece.pos === state.originalSquare!.dataset.pos,
@@ -187,6 +187,8 @@ export async function makeMove(
             state,
         );
     }
+
+    drawBoard(state);
 
     await checkIfGameOver(state, isChecking, pieceColor);
 

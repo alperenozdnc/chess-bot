@@ -47,10 +47,7 @@ interface Data {
     isJustChecking: boolean;
 }
 
-export async function checkLegality(
-    state: GameState,
-    data: Data,
-): Promise<MoveLegality> {
+export function checkLegality(state: GameState, data: Data): MoveLegality {
     const pieceObject = data.piece;
 
     let isMoveLegal = false;
@@ -262,6 +259,10 @@ export async function checkLegality(
             (piece) => piece.id === "k" && piece.color === data.piece.color,
         )!.pos;
 
+        state.enemyKingPos = state.Board.find(
+            (piece) => piece.id === "k" && piece.color !== data.piece.color,
+        )!.pos;
+
         let isCheck = isSquareAttacked(state, {
             pos: state.kingPos,
             attackerColor: data.piece.color === "white" ? "black" : "white",
@@ -276,6 +277,7 @@ export async function checkLegality(
             isCapturing,
             isEnPassant,
             enPassantablePawn,
+            state.Board.find((p) => p.pos === data.destinationPos),
         );
 
         const simulatedState = move.play();

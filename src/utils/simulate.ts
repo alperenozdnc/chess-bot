@@ -1,6 +1,5 @@
 import { GameState, PieceData } from "@interfaces";
 import { updateBoard } from "./updateBoard";
-import { initGameState } from "@functions";
 import { CastlingMap } from "@maps";
 import { Pieces } from "@enums";
 
@@ -13,9 +12,14 @@ export function simulate(
     isCapturing: boolean,
     isEnPassant: boolean,
     enPassantablePawn?: PieceData | undefined,
+    capturedPiece?: PieceData,
 ) {
-    const simulatedState = initGameState();
-    const simulatedBoard = structuredClone(state.Board);
+    const simulatedBoard = state.Board.map((p) => ({ ...p }));
+    const simulatedState: GameState = {
+        ...state,
+        Board: simulatedBoard,
+        kingPos: state.kingPos,
+    };
 
     simulatedState.Board = simulatedBoard;
 
@@ -24,7 +28,7 @@ export function simulate(
     )!;
 
     function play() {
-        simulatedPiece.moveCount += 1;
+        simulatedPiece.moveCount++;
 
         let keepMoving = true;
 
@@ -37,9 +41,7 @@ export function simulate(
                         destinationPos,
                         promoteTo: Pieces.Queen,
                         isCapturing,
-                        capturedPiece: simulatedState.Board.find(
-                            (piece) => piece.pos === destinationPos,
-                        ),
+                        capturedPiece,
                     },
                 },
                 simulatedState,
@@ -86,7 +88,7 @@ export function simulate(
                 simulatedState,
             );
         } else {
-            let simulatedEnPassantablePawnPos;
+            let simulatedEnPassantablePawnPos: string;
 
             if (enPassantablePawn) {
                 simulatedEnPassantablePawnPos = enPassantablePawn.pos;
@@ -98,13 +100,12 @@ export function simulate(
                     data: {
                         piece: simulatedPiece,
                         destinationPos: destinationPos,
-                        capturedPiece: simulatedState.Board.find(
-                            (p) =>
-                                p.pos ===
-                                (!isEnPassant
-                                    ? destinationPos
-                                    : simulatedEnPassantablePawnPos!),
-                        )!,
+                        capturedPiece: !isEnPassant
+                            ? capturedPiece!
+                            : state.Board.find(
+                                (p) =>
+                                    p.pos === simulatedEnPassantablePawnPos,
+                            )!,
                         isEnPassant,
                     },
                 },
@@ -112,18 +113,10 @@ export function simulate(
             );
         }
 
-        const king = simulatedState.Board.find(
-            (p) => p.id === "k" && p.color === piece.color,
-        );
-
-        const enemyKing = simulatedState.Board.find(
-            (p) => p.id === "k" && p.color !== piece.color,
-        );
-
-        if (!king || !enemyKing) return console.error("no king/enemy king");
-
-        simulatedState.kingPos = king!.pos;
-        simulatedState.enemyKingPos = enemyKing!.pos;
+        // incrementally track king positions
+        if (simulatedPiece.id === "k") {
+            simulatedState.kingPos = simulatedPiece.pos;
+        }
 
         return simulatedState;
     }

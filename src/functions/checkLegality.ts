@@ -50,7 +50,6 @@ interface Data {
 export async function checkLegality(
     state: GameState,
     data: Data,
-    isBotMove = false,
 ): Promise<MoveLegality> {
     const pieceObject = data.piece;
 

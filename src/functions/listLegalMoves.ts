@@ -5,7 +5,6 @@ import { GameState, LegalMoveData, PieceData } from "@interfaces";
 export async function listLegalMoves(
     state: GameState,
     piece: PieceData,
-    isBotMove = false,
 ): Promise<LegalMoveData[]> {
     let moves: LegalMoveData[] = [];
 
@@ -15,15 +14,11 @@ export async function listLegalMoves(
 
             if (pos === piece.pos) continue;
 
-            const { isMoveLegal, isCapturing } = await checkLegality(
-                state,
-                {
-                    piece: piece,
-                    destinationPos: pos,
-                    isJustChecking: true,
-                },
-                isBotMove,
-            );
+            const { isMoveLegal, isCapturing } = await checkLegality(state, {
+                piece: piece,
+                destinationPos: pos,
+                isJustChecking: true,
+            });
 
             if (isMoveLegal) {
                 moves.push({ pos, isCapturing });

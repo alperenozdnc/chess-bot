@@ -41,15 +41,6 @@ export function checkForObstacles(
     return true;
 }
 
-const defaultRet = {
-    isMoveLegal: false,
-    isCapturing: false,
-    isPromoting: false,
-    isCastling: false,
-    isChecking: false,
-    isEnPassant: false,
-};
-
 interface Data {
     piece: PieceData;
     destinationPos: string;
@@ -59,10 +50,9 @@ interface Data {
 export async function checkLegality(
     state: GameState,
     data: Data,
+    isBotMove = false,
 ): Promise<MoveLegality> {
     const pieceObject = data.piece;
-
-    if (!pieceObject && !data.isJustChecking) return defaultRet;
 
     let isMoveLegal = false;
 
@@ -266,42 +256,48 @@ export async function checkLegality(
             break;
     }
 
-    const king = state.Board.find(
-        (piece) => piece.id === "k" && piece.color === data.piece.color,
-    )!;
+    let isChecking = false;
 
-    const enemyKing = state.Board.find(
-        (piece) => piece.id === "k" && piece.color !== data.piece.color,
-    )!;
+    if (isMoveLegal) {
+        state.kingPos = state.Board.find(
+            (piece) => piece.id === "k" && piece.color === data.piece.color,
+        )!.pos;
 
-    let isCheck = isSquareAttacked(state, {
-        pos: king.pos,
-        attackerColor: data.piece.color === "white" ? "black" : "white",
-    });
+        let isCheck = isSquareAttacked(state, {
+            pos: state.kingPos,
+            attackerColor: data.piece.color === "white" ? "black" : "white",
+        });
 
-    const move = simulate(
-        state,
-        pieceObject,
-        data.destinationPos,
-        isCapturing,
-        isEnPassant,
-    );
+        const move = simulate(
+            state,
+            pieceObject,
+            data.destinationPos,
+            isCastling,
+            isPromoting,
+            isCapturing,
+            isEnPassant,
+            enPassantablePawn,
+        );
 
-    move.play();
+        const simulatedState = move.play();
 
-    const isChecking = isSquareAttacked(state, {
-        pos: enemyKing.pos,
-        attackerColor: data.piece.color,
-    });
+        if (simulatedState) {
+            isChecking = isSquareAttacked(simulatedState, {
+                pos: simulatedState.enemyKingPos!,
+                attackerColor: data.piece.color,
+            });
 
-    isCheck = isSquareAttacked(state, {
-        pos: data.piece.id === Pieces.King ? posB : king.pos,
-        attackerColor: data.piece.color === "white" ? "black" : "white",
-    });
+            isCheck = isSquareAttacked(simulatedState, {
+                pos:
+                    data.piece.id === Pieces.King
+                        ? posB
+                        : simulatedState.kingPos!,
+                attackerColor: data.piece.color === "white" ? "black" : "white",
+            });
 
-    move.unplay();
-
-    if (isCheck) isMoveLegal = false;
+            if (isCheck) isMoveLegal = false;
+        }
+    }
 
     return {
         isMoveLegal,

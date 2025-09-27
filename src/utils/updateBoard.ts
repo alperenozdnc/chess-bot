@@ -57,13 +57,11 @@ export function updateBoard(action: ActionTypeRequirements, state: GameState) {
 
             state.Board.splice(state.Board.indexOf(data.capturedPiece), 1);
             data.piece.pos = data.destinationPos;
-            data.piece.moveCount += 1;
 
             break;
         }
         case "CASTLE": {
             data.king.piece.pos = data.king.destinationPos;
-            data.king.piece.moveCount += 1;
             data.rook.piece.pos = data.rook.destinationPos;
             data.rook.piece.moveCount += 1;
 
@@ -82,6 +80,4 @@ export function updateBoard(action: ActionTypeRequirements, state: GameState) {
             break;
         }
     }
-
-    drawBoard(state);
 }

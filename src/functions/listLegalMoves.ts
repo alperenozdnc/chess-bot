@@ -1,41 +1,35 @@
+import { FILES } from "@constants";
 import { checkLegality } from "@functions";
-import { GameState, LegalMoveData } from "@interfaces";
+import { GameState, LegalMoveData, PieceData } from "@interfaces";
 
-interface Data {
-    state: GameState;
-}
+export async function listLegalMoves(
+    state: GameState,
+    piece: PieceData,
+    isBotMove = false,
+): Promise<LegalMoveData[]> {
+    let moves: LegalMoveData[] = [];
 
-export async function listLegalMoves({
-    state,
-}: Data): Promise<LegalMoveData[]> {
-    let squares: HTMLDivElement[] = [];
+    for (const file of FILES) {
+        for (let rank = 1; rank <= 8; ++rank) {
+            const pos = file + rank;
 
-    document
-        .querySelectorAll(".square")
-        .forEach((square) => squares.push(square as HTMLDivElement));
+            if (pos === piece.pos) continue;
 
-    let legalMoves: LegalMoveData[] = [];
+            const { isMoveLegal, isCapturing } = await checkLegality(
+                state,
+                {
+                    piece: piece,
+                    destinationPos: pos,
+                    isJustChecking: true,
+                },
+                isBotMove,
+            );
 
-    for (const square of squares) {
-        if (square === state.originalSquare) continue;
-        if (!state.draggedPiece) break;
-
-        const pieceObject = state.Board.find(
-            (piece) => piece.pos === state.originalSquare!.dataset.pos,
-        );
-
-        if (!pieceObject) continue;
-
-        const { isMoveLegal, isCapturing } = await checkLegality(state, {
-            piece: pieceObject,
-            destinationPos: square.dataset.pos!,
-            isJustChecking: true,
-        });
-
-        if (isMoveLegal) {
-            legalMoves.push({ square, isCapturing });
+            if (isMoveLegal) {
+                moves.push({ pos, isCapturing });
+            }
         }
     }
 
-    return legalMoves;
+    return moves;
 }

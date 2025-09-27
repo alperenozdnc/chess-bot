@@ -70,7 +70,7 @@ export async function makeMove(
         isEnPassant,
         isChecking,
         enPassantablePawnPos,
-    } = await checkLegality(state, {
+    } = checkLegality(state, {
         piece: pieceObject!,
         destinationPos: target.dataset.pos!,
         isJustChecking: false,

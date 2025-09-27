@@ -11,9 +11,9 @@ export async function handleDragEnd(state: GameState) {
         if (target.classList.contains("piece"))
             target = target.parentElement as HTMLDivElement;
 
-        const moveSuccess = await makeMove(state, target as HTMLDivElement);
+        const moveResult = await makeMove(state, target as HTMLDivElement);
 
-        if (!moveSuccess) return;
+        if (!moveResult) return;
 
         // setTimeout because js is single threaded and makes the piece not drop until the bot can play
         setTimeout(async () => {

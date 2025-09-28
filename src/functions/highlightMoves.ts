@@ -10,7 +10,7 @@ export async function highlightMoves(state: GameState) {
     if (!piece) return;
     if (!checkTurn(state.moveIdx, piece.color)) return;
 
-    const moves = await listLegalMoves(state, piece);
+    const moves = listLegalMoves(state, piece);
 
     for (const move of moves) {
         const square = document.querySelector(

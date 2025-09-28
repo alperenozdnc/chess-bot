@@ -192,12 +192,17 @@ export async function makeMove(
 
     await checkIfGameOver(state, isChecking, pieceColor);
 
-    if (state.isGameOver) resetBoard(state);
+    let gameOver = false;
+
+    if (state.isGameOver) {
+        resetBoard(state);
+        gameOver = true;
+    }
 
     if (state.draggedPiece) {
         resetDraggedPieceStyles(state.draggedPiece);
         state.draggedPiece = null;
     }
 
-    return true;
+    return { success: true, gameOver };
 }

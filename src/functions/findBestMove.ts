@@ -1,15 +1,10 @@
-import { GameState, LegalMoveDataWithDOM } from "@interfaces";
+import { GameState, LegalMoveData } from "@interfaces";
 import { listAllLegalMoves } from "./listAllLegalMoves";
 import { minimax } from "./minimax";
 import { simulate } from "@utils";
 
-export async function findBestMove(
-    state: GameState,
-    depth: number,
-): Promise<LegalMoveDataWithDOM | null> {
-    const MAKE_DOM_LOOKUP = true;
-
-    const moves = listAllLegalMoves(state, state.botColor, MAKE_DOM_LOOKUP);
+function iterate(state: GameState, depth: number) {
+    const moves = listAllLegalMoves(state, state.botColor, false);
 
     if (moves.length === 0) {
         console.error("no moves to check for");
@@ -20,13 +15,13 @@ export async function findBestMove(
      equal, this helps to keep unpredictability in the bot. */
     const rootMove = moves[
         Math.floor(Math.random() * moves.length)
-    ] as LegalMoveDataWithDOM;
+    ] as LegalMoveData;
 
-    let bestMove: LegalMoveDataWithDOM = rootMove;
+    let bestMove: LegalMoveData = rootMove;
     let bestEval: number = -Infinity;
 
     for (let i = 0; i < moves.length; i++) {
-        const move = moves[i] as LegalMoveDataWithDOM;
+        const move = moves[i] as LegalMoveData;
         const simulation = simulate(
             state,
             move.piece,
@@ -55,4 +50,23 @@ export async function findBestMove(
     }
 
     return bestMove;
+}
+
+function iterativelyFindBestMove(state: GameState, depthLimit: number) {
+    let bestMove: LegalMoveData | undefined;
+
+    for (let d = 1; d <= depthLimit; d++) {
+        const move = iterate(state, d);
+
+        bestMove = move!;
+    }
+
+    return bestMove;
+}
+
+export function findBestMove(
+    state: GameState,
+    depth: number,
+): LegalMoveData | undefined {
+    return iterativelyFindBestMove(state, depth);
 }

@@ -26,3 +26,4 @@ export { evaluate } from "./evaluate";
 export { listAllLegalMoves } from "./listAllLegalMoves";
 export { minimax } from "./minimax";
 export { findBestMove } from "./findBestMove";
+export { heuristicScore } from "./heuristicScore";

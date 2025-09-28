@@ -33,8 +33,8 @@ type ActionTypeRequirements =
 export function updateBoard(action: ActionTypeRequirements, state: GameState) {
     const { type, data } = action;
 
-    const overlappingElement = state.Board.find(
-        (piece) => piece.pos === (data as ActionData).destinationPos,
+    const overlappingElement = state.Board.get(
+        (data as ActionData).destinationPos,
     );
 
     switch (type) {
@@ -47,34 +47,95 @@ export function updateBoard(action: ActionTypeRequirements, state: GameState) {
                 return;
             }
 
-            data.piece.pos = data.destinationPos;
+            const pieceCopy = { ...data.piece, pos: data.destinationPos };
+
+            state.Board.delete(data.piece.pos);
+            state.Board.set(data.destinationPos, pieceCopy);
 
             break;
         }
         case "CAPTURE": {
             if (!overlappingElement && !data.isEnPassant) return;
 
-            state.Board.splice(state.Board.indexOf(data.capturedPiece), 1);
-            data.piece.pos = data.destinationPos;
+            state.Board.delete(data.capturedPiece.pos);
+
+            updateBoard(
+                {
+                    type: "MOVE",
+                    data: {
+                        piece: data.piece,
+                        destinationPos: data.destinationPos,
+                    },
+                },
+                state,
+            );
 
             break;
         }
         case "CASTLE": {
-            data.king.piece.pos = data.king.destinationPos;
-            data.rook.piece.pos = data.rook.destinationPos;
-            data.rook.piece.moveCount += 1;
+            updateBoard(
+                {
+                    type: "MOVE",
+                    data: {
+                        piece: data.king.piece,
+                        destinationPos: data.king.destinationPos,
+                    },
+                },
+                state,
+            );
+
+            const rookCopy = {
+                ...data.rook.piece,
+                moveCount: data.rook.piece.moveCount + 1,
+            };
+
+            updateBoard(
+                {
+                    type: "MOVE",
+                    data: {
+                        piece: rookCopy,
+                        destinationPos: data.rook.destinationPos,
+                    },
+                },
+                state,
+            );
 
             break;
         }
         case "PROMOTE": {
             if (data.isCapturing && !overlappingElement) return;
-            if (data.isCapturing && data.capturedPiece) {
-                state.Board.splice(state.Board.indexOf(data.capturedPiece), 1);
-            }
 
-            data.piece.pos = data.destinationPos;
-            data.piece.moveCount = 0;
-            data.piece.id = data.promoteTo;
+            const pieceCopy = {
+                ...data.piece,
+                id: data.promoteTo,
+                moveCount: 0,
+            };
+
+            if (data.isCapturing && data.capturedPiece) {
+                updateBoard(
+                    {
+                        type: "CAPTURE",
+                        data: {
+                            piece: pieceCopy,
+                            destinationPos: data.destinationPos,
+                            capturedPiece: data.capturedPiece,
+                            isEnPassant: false,
+                        },
+                    },
+                    state,
+                );
+            } else {
+                updateBoard(
+                    {
+                        type: "MOVE",
+                        data: {
+                            piece: pieceCopy,
+                            destinationPos: data.destinationPos,
+                        },
+                    },
+                    state,
+                );
+            }
 
             break;
         }

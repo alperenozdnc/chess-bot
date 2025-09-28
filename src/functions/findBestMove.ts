@@ -5,6 +5,7 @@ import { simulate } from "@utils";
 
 export async function findBestMove(
     state: GameState,
+    depth: number,
 ): Promise<LegalMoveDataWithDOM | null> {
     const MAKE_DOM_LOOKUP = true;
 
@@ -41,7 +42,7 @@ export async function findBestMove(
 
         if (!newState) continue;
 
-        const evaluation = minimax(newState, 1, true);
+        const evaluation = minimax(newState, depth, true);
 
         if (evaluation > bestEval) {
             bestMove = move;

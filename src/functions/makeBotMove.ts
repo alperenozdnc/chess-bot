@@ -2,7 +2,11 @@ import { makeMove, findBestMove } from "@functions";
 import { GameState } from "@interfaces";
 
 export async function makeBotMove(state: GameState) {
-    const move = await findBestMove(state);
+    const DEPTH = 0;
+
+    console.time("calc, depth=" + DEPTH);
+    const move = await findBestMove(state, DEPTH);
+    console.timeEnd("calc, depth=" + DEPTH);
 
     if (!move) return;
 

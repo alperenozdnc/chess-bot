@@ -2,7 +2,7 @@ import { isSquareAttacked } from "@functions";
 import { FILES } from "@constants";
 import { Pieces } from "@enums";
 import { GameState, MoveLegality, PieceData } from "@interfaces";
-import { simulate } from "@utils";
+import { find, simulate } from "@utils";
 import { PieceColor } from "@types";
 import { CastlingMap } from "@maps";
 
@@ -17,7 +17,7 @@ export function checkForObstacles(
 
     for (const direction of directions) {
         for (const pos2 of direction) {
-            const piece = state.Board.find((piece) => piece.pos === pos2);
+            const piece = state.Board.get(pos2);
 
             if (piece) {
                 if (piece.color !== color) {
@@ -65,12 +65,16 @@ export function checkLegality(state: GameState, data: Data): MoveLegality {
     let isPromoting = false;
     let isCastling = false;
     let isEnPassant = false;
-    const enPassantablePawn = state.Board.find(
-        (piece) => piece.enPassantMoveIdx,
+    const enPassantablePawnKeyValue = find<string, PieceData>(
+        (_, v) => v.enPassantMoveIdx !== undefined,
+        state.Board,
     );
-    const capturedPiece = state.Board.find(
-        (piece) => piece.pos === data.destinationPos,
-    );
+
+    const enPassantablePawn = enPassantablePawnKeyValue
+        ? enPassantablePawnKeyValue.value
+        : undefined;
+
+    const capturedPiece = state.Board.get(data.destinationPos);
 
     if (capturedPiece) {
         if (data.piece.color === capturedPiece.color) {
@@ -91,9 +95,7 @@ export function checkLegality(state: GameState, data: Data): MoveLegality {
         case Pieces.Pawn:
             const direction = data.piece.color === "white" ? 1 : -1;
             const nextSquarePos = `${FILES[fileA]}${rankB - direction}`;
-            const nextSquareData = state.Board.find(
-                (piece) => piece.pos === nextSquarePos,
-            );
+            const nextSquareData = state.Board.get(nextSquarePos);
             let isDirectionRight = false;
 
             if (rankA < rankB && direction === 1) isDirectionRight = true;
@@ -208,9 +210,7 @@ export function checkLegality(state: GameState, data: Data): MoveLegality {
 
                 // .length - 1 is accounting for the rook here
                 if (emptySquares.length === castlingPieces.length - 1) {
-                    const piece = state.Board.find(
-                        (piece) => piece.pos === rookPos,
-                    );
+                    const piece = state.Board.get(rookPos);
 
                     if (piece && piece.id === Pieces.Rook) {
                         if (piece.moveCount === 0) {
@@ -255,13 +255,18 @@ export function checkLegality(state: GameState, data: Data): MoveLegality {
     let isChecking = false;
 
     if (isMoveLegal) {
-        state.kingPos = state.Board.find(
-            (piece) => piece.id === "k" && piece.color === data.piece.color,
-        )!.pos;
+        const king = find<string, PieceData>(
+            (_, v) => v.id === "k" && v.color === data.piece.color,
+            state.Board,
+        )!;
 
-        state.enemyKingPos = state.Board.find(
-            (piece) => piece.id === "k" && piece.color !== data.piece.color,
-        )!.pos;
+        const enemyKing = find<string, PieceData>(
+            (_, v) => v.id === "k" && v.color !== data.piece.color,
+            state.Board,
+        )!;
+
+        state.kingPos = king.value.pos;
+        state.enemyKingPos = enemyKing.value.pos;
 
         let isCheck = isSquareAttacked(state, {
             pos: state.kingPos,
@@ -277,7 +282,7 @@ export function checkLegality(state: GameState, data: Data): MoveLegality {
             isCapturing,
             isEnPassant,
             enPassantablePawn,
-            state.Board.find((p) => p.pos === data.destinationPos),
+            state.Board.get(data.destinationPos),
         );
 
         const simulatedState = move.play();

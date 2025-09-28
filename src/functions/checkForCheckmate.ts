@@ -6,9 +6,7 @@ import { GameState } from "@interfaces";
 export async function checkForCheckmate(state: GameState, color: PieceColor) {
     for (const file of FILES) {
         for (let rank = 1; rank <= 8; ++rank) {
-            const piece = state.Board.find(
-                (piece) => piece.pos === file + rank,
-            );
+            const piece = state.Board.get(file + rank);
 
             if (!piece) continue;
             if (piece.color !== color) continue;

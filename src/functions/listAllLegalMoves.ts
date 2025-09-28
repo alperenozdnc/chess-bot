@@ -2,26 +2,7 @@ import { FILES } from "@constants";
 import { GameState, LegalMoveData, LegalMoveDataWithDOM } from "@interfaces";
 import { PieceColor } from "@types";
 
-import { listLegalMoves } from "@functions";
-import { Values } from "@enums";
-
-function score(data: LegalMoveData): number {
-    if (data.isPromoting) {
-        return 1000;
-    } else if (data.isCapturing) {
-        const attackerValue = Values[data.piece.id as keyof typeof Values];
-        if (!data.capturedPiece) return 100;
-
-        const victimId = data.capturedPiece!.id;
-        const victimValue = Values[victimId as keyof typeof Values];
-
-        return 100 * victimValue - attackerValue;
-    } else if (data.isChecking) {
-        return 300;
-    }
-
-    return 1;
-}
+import { heuristicScore, listLegalMoves } from "@functions";
 
 export function listAllLegalMoves(
     state: GameState,
@@ -59,9 +40,11 @@ export function listAllLegalMoves(
     if (makeDOMLookup) {
         return allMoves;
     } else {
+        // this weird map and sort and underscore action
+        // reduces time complexity from O(n log n) down to O(n)
         const scoredMoves = allMoves.map((m) => ({
             move: m,
-            _score: score(m),
+            _score: heuristicScore(m),
         }));
         scoredMoves.sort((a, b) => b._score - a._score);
 

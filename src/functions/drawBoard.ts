@@ -34,7 +34,8 @@ export function drawBoard(state: GameState) {
 
             SQUARE_ELEMENT.dataset.pos = pos;
             ROW_ELEMENT.appendChild(SQUARE_ELEMENT);
-            const piece = state.Board.find((piece) => piece.pos === pos);
+
+            const piece = state.Board.get(pos);
 
             if (piece) {
                 createPiece(piece);

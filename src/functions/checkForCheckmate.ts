@@ -11,7 +11,7 @@ export async function checkForCheckmate(state: GameState, color: PieceColor) {
             if (!piece) continue;
             if (piece.color !== color) continue;
 
-            const moves = await listLegalMoves(state, piece);
+            const moves = listLegalMoves(state, piece);
 
             if (moves.length > 0) return false;
         }

@@ -13,7 +13,7 @@ export function listAllLegalMoves(
 
     for (const file of FILES) {
         for (let rank = 1; rank <= 8; rank++) {
-            const piece = state.Board.find((p) => p.pos === file + rank);
+            const piece = state.Board.get(file + rank);
             if (!piece) continue;
             if (piece.color !== color) continue;
 

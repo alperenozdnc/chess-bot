@@ -4,7 +4,7 @@ import { Piece } from "@types";
 
 export function turnFENToBoardArray(FEN: string, state: GameState) {
     let FENIdx = 0;
-    state.Board = [];
+    state.Board = new Map();
 
     for (let row = 0; row < 8; ++row) {
         let spacesLeft = 0;
@@ -21,7 +21,7 @@ export function turnFENToBoardArray(FEN: string, state: GameState) {
                     let piece: Piece = FEN[FENIdx] as Piece;
 
                     if (isNaN(piece as unknown as number)) {
-                        state.Board.push({
+                        state.Board.set(pos, {
                             id: piece.toLowerCase() as Piece,
                             color:
                                 piece === piece.toUpperCase()

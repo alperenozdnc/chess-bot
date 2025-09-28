@@ -1,9 +1,9 @@
 import { INITIAL_POSITION } from "@constants";
-import { GameState } from "@interfaces";
+import { GameState, PieceData } from "@interfaces";
 
 export function initGameState(): GameState {
     return {
-        Board: [],
+        Board: new Map<string, PieceData>(),
         botColor: "black",
         FENPositions: [INITIAL_POSITION],
         draggedPiece: null,

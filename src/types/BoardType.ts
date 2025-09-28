@@ -1,3 +1,3 @@
 import { PieceData } from "@interfaces";
 
-export type BoardType = PieceData[];
+export type BoardType = Map<string, PieceData>;

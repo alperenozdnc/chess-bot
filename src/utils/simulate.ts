@@ -14,20 +14,19 @@ export function simulate(
     enPassantablePawn?: PieceData | undefined,
     capturedPiece?: PieceData,
 ) {
-    const simulatedBoard = structuredClone(state.Board);
     const simulatedState: GameState = {
         ...state,
-        Board: simulatedBoard,
+        Board: new Map(state.Board),
         kingPos: state.kingPos,
     };
 
-    simulatedState.Board = simulatedBoard;
-    const simulatedPiece = simulatedState.Board.get(piece.pos)!;
+    const simulatedPiece = { ...simulatedState.Board.get(piece.pos)! };
 
     function play() {
         simulatedPiece.moveCount++;
 
         let keepMoving = true;
+        simulatedState.Board.set(piece.pos, simulatedPiece);
 
         if (isPromoting) {
             updateBoard(

@@ -100,13 +100,15 @@ export function checkLegality(state: GameState, data: Data): MoveLegality {
 
             if (rankA < rankB && direction === 1) isDirectionRight = true;
             if (rankA > rankB && direction === -1) isDirectionRight = true;
+
             if (dr == 1 && df === 0 && isDirectionRight) isMoveLegal = true;
+
             if (
                 dr == 2 &&
                 df === 0 &&
                 data.piece.moveCount === 0 &&
                 isDirectionRight &&
-                !nextSquareData
+                nextSquareData === undefined
             )
                 isMoveLegal = true;
             if (isCapturing)
@@ -152,7 +154,7 @@ export function checkLegality(state: GameState, data: Data): MoveLegality {
                 }
             }
 
-            if (dr === 2 && !data.isJustChecking) {
+            if (dr === 2 && !data.isJustChecking && isMoveLegal) {
                 pieceObject.enPassantMoveIdx = state.moveIdx + 1;
             }
 
@@ -264,6 +266,16 @@ export function checkLegality(state: GameState, data: Data): MoveLegality {
             (_, v) => v.id === "k" && v.color !== data.piece.color,
             state.Board,
         )!;
+
+        if (!king || !enemyKing)
+            return {
+                isMoveLegal: false,
+                isCapturing: false,
+                isCastling: false,
+                isChecking: false,
+                isEnPassant: false,
+                isPromoting: false,
+            };
 
         state.kingPos = king.value.pos;
         state.enemyKingPos = enemyKing.value.pos;

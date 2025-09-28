@@ -47,7 +47,11 @@ export function updateBoard(action: ActionTypeRequirements, state: GameState) {
                 return;
             }
 
-            const pieceCopy = { ...data.piece, pos: data.destinationPos };
+            const pieceCopy = {
+                ...data.piece,
+                moveCount: data.piece.moveCount + 1,
+                pos: data.destinationPos,
+            };
 
             state.Board.delete(data.piece.pos);
             state.Board.set(data.destinationPos, pieceCopy);
@@ -86,7 +90,6 @@ export function updateBoard(action: ActionTypeRequirements, state: GameState) {
 
             const rookCopy = {
                 ...data.rook.piece,
-                moveCount: data.rook.piece.moveCount + 1,
             };
 
             updateBoard(

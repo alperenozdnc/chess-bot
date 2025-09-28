@@ -27,10 +27,8 @@ export function minimax(
             move.isPromoting,
             move.isCapturing,
             move.isEnPassant,
-            state.Board.find((p) => p.pos === move.enPassantablePawnPos),
-            move.isCapturing
-                ? state.Board.find((p) => p.pos === move.pos)
-                : undefined,
+            state.Board.get(move.enPassantablePawnPos!) ?? undefined,
+            move.isCapturing ? state.Board.get(move.pos) : undefined,
         );
 
         const newState = simulation.play();

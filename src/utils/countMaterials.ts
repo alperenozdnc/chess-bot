@@ -13,7 +13,7 @@ export function countMaterials(state: GameState) {
     let white = 0;
     let black = 0;
 
-    for (const piece of state.Board) {
+    for (let [_, piece] of state.Board) {
         if (piece.id === Pieces.King) continue;
 
         const value = piece.id as keyof typeof Values;

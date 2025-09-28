@@ -14,7 +14,7 @@ export function simulate(
     enPassantablePawn?: PieceData | undefined,
     capturedPiece?: PieceData,
 ) {
-    const simulatedBoard = state.Board.map((p) => ({ ...p }));
+    const simulatedBoard = structuredClone(state.Board);
     const simulatedState: GameState = {
         ...state,
         Board: simulatedBoard,
@@ -22,10 +22,7 @@ export function simulate(
     };
 
     simulatedState.Board = simulatedBoard;
-
-    const simulatedPiece = simulatedState.Board.find(
-        (p) => p.pos === piece.pos,
-    )!;
+    const simulatedPiece = simulatedState.Board.get(piece.pos)!;
 
     function play() {
         simulatedPiece.moveCount++;
@@ -63,9 +60,7 @@ export function simulate(
                             destinationPos: destinationPos,
                         },
                         rook: {
-                            piece: simulatedState.Board.find(
-                                (piece) => piece.pos === posA,
-                            )!,
+                            piece: simulatedState.Board.get(posA)!,
                             destinationPos: posB,
                         },
                     },
@@ -88,29 +83,34 @@ export function simulate(
                 simulatedState,
             );
         } else {
-            let simulatedEnPassantablePawnPos: string;
+            if (keepMoving) {
+                let simulatedEnPassantablePawnPos: string;
 
-            if (enPassantablePawn) {
-                simulatedEnPassantablePawnPos = enPassantablePawn.pos;
-            }
+                if (enPassantablePawn) {
+                    simulatedEnPassantablePawnPos = enPassantablePawn.pos;
+                }
 
-            updateBoard(
-                {
-                    type: "CAPTURE",
-                    data: {
-                        piece: simulatedPiece,
-                        destinationPos: destinationPos,
-                        capturedPiece: !isEnPassant
-                            ? capturedPiece!
-                            : state.Board.find(
-                                (p) =>
-                                    p.pos === simulatedEnPassantablePawnPos,
-                            )!,
-                        isEnPassant,
+                capturedPiece = capturedPiece
+                    ? capturedPiece
+                    : state.Board.get(destinationPos);
+
+                updateBoard(
+                    {
+                        type: "CAPTURE",
+                        data: {
+                            piece: simulatedPiece,
+                            destinationPos: destinationPos,
+                            capturedPiece: !isEnPassant
+                                ? capturedPiece!
+                                : state.Board.get(
+                                    simulatedEnPassantablePawnPos!,
+                                )!,
+                            isEnPassant,
+                        },
                     },
-                },
-                simulatedState,
-            );
+                    simulatedState,
+                );
+            }
         }
 
         // incrementally track king positions

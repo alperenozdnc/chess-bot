@@ -85,7 +85,6 @@ export async function makeMove(
     let pos = (target as HTMLDivElement).dataset.pos;
 
     ++state.moveIdx;
-    pieceObject!.moveCount += 1;
 
     if (!pieceObject) {
         console.error("piece not found");

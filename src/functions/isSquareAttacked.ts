@@ -89,7 +89,7 @@ function generateRookDirections(pos: Position): string[][] {
 
 export function isSquareAttacked(state: GameState, data: Data): boolean {
     const { pos: attackedPos, attackerColor, piece, attackerPos } = data;
-    const attackedPiece = state.Board.find((p) => p.pos === attackedPos);
+    const attackedPiece = state.Board.get(attackedPos);
 
     if (attackerColor === attackedPiece?.color) return false;
 
@@ -101,9 +101,7 @@ export function isSquareAttacked(state: GameState, data: Data): boolean {
     for (const attackerFile of FILES) {
         for (let attackerRank = 1; attackerRank <= 8; ++attackerRank) {
             const attackerPosString = `${attackerFile}${attackerRank}`;
-            const attackerPiece = state.Board.find(
-                (p) => p.pos === attackerPosString,
-            );
+            const attackerPiece = state.Board.get(attackerPosString);
 
             if (!attackerPiece) continue;
             if (attackerPiece.color !== attackerColor) continue;

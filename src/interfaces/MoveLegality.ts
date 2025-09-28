@@ -1,3 +1,5 @@
+import { PieceData } from "./PieceData";
+
 export interface MoveLegality {
     isMoveLegal: boolean;
     isCapturing: boolean;
@@ -5,5 +7,6 @@ export interface MoveLegality {
     isCastling: boolean;
     isChecking: boolean;
     isEnPassant: boolean;
+    capturedPiece: PieceData | undefined;
     enPassantablePawnPos?: string;
 }

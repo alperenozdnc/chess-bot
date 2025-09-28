@@ -1,13 +1,5 @@
-import { Pieces } from "@enums";
+import { Pieces, Values } from "@enums";
 import { GameState } from "@interfaces";
-
-enum Values {
-    "p" = 1,
-    "n" = 3,
-    "b" = 3,
-    "r" = 5,
-    "q" = 9,
-}
 
 export function countMaterials(state: GameState) {
     let white = 0;

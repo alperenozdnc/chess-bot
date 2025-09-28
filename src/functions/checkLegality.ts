@@ -324,6 +324,7 @@ export function checkLegality(state: GameState, data: Data): MoveLegality {
         isCastling,
         isEnPassant,
         isChecking,
+        capturedPiece,
         enPassantablePawnPos: enPassantablePawn?.pos ?? undefined,
     };
 }

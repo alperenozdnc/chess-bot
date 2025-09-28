@@ -20,6 +20,8 @@ export function listLegalMoves(
                 isPromoting,
                 isCapturing,
                 isEnPassant,
+                isChecking,
+                capturedPiece,
                 enPassantablePawnPos,
             } = checkLegality(state, {
                 piece: piece,
@@ -35,6 +37,8 @@ export function listLegalMoves(
                     isCastling,
                     isPromoting,
                     isEnPassant,
+                    isChecking,
+                    capturedPiece,
                     enPassantablePawnPos,
                 });
             }

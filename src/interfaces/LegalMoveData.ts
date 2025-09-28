@@ -7,6 +7,8 @@ export interface LegalMoveData {
     isCastling: boolean;
     isPromoting: boolean;
     isEnPassant: boolean;
+    isChecking: boolean;
+    capturedPiece: PieceData | undefined;
     enPassantablePawnPos?: string;
 }
 

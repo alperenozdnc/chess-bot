@@ -35,7 +35,7 @@ export async function findBestMove(
             move.isPromoting,
             move.isCapturing,
             move.isEnPassant,
-            state.Board.find((p) => p.pos === move.enPassantablePawnPos),
+            state.Board.get(move.enPassantablePawnPos!) ?? undefined,
         );
 
         const newState = simulation.play();

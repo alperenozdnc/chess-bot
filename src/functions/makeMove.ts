@@ -43,6 +43,8 @@ export async function makeMove(
     isComputer?: boolean,
 ) {
     if (!state.draggedPiece) return;
+    if (!state.originalSquare) return;
+    if (!state.originalSquare.dataset.pos) return;
 
     const pieceColor = state.draggedPiece.dataset.color as PieceColor;
     let pieceCanMove = checkTurn(state.moveIdx, pieceColor);
@@ -58,9 +60,7 @@ export async function makeMove(
         return;
     }
     let pieceid = state.draggedPiece.dataset.pieceid!.toUpperCase();
-    const pieceObject = state.Board.find(
-        (piece) => piece.pos === state.originalSquare!.dataset.pos,
-    );
+    const pieceObject = state.Board.get(state.originalSquare.dataset.pos);
 
     const {
         isMoveLegal,
@@ -118,19 +118,17 @@ export async function makeMove(
                 state,
             );
         } else {
+            const capturedPiecePos = !isEnPassant
+                ? target.dataset.pos
+                : enPassantablePawnPos!;
+
             updateBoard(
                 {
                     type: "CAPTURE",
                     data: {
                         piece: pieceObject,
                         destinationPos: target.dataset.pos,
-                        capturedPiece: state.Board.find(
-                            (piece) =>
-                                piece.pos ===
-                                (!isEnPassant
-                                    ? target.dataset.pos
-                                    : enPassantablePawnPos),
-                        )!,
+                        capturedPiece: state.Board.get(capturedPiecePos)!,
                         isEnPassant,
                     },
                 },
@@ -153,9 +151,7 @@ export async function makeMove(
                     destinationPos: target.dataset.pos,
                     promoteTo: selection as Piece,
                     isCapturing,
-                    capturedPiece: state.Board.find(
-                        (piece) => piece.pos === target.dataset.pos,
-                    ),
+                    capturedPiece: state.Board.get(target.dataset.pos),
                 },
             },
             state,
@@ -170,6 +166,10 @@ export async function makeMove(
         const posA = castlingSquares[castlingSquares.length - 1];
         const posB = castlingSquares[0];
 
+        if (!state.Board.has(posA))
+            return console.error("castling unsuccessful");
+        if (!posA) return console.error("castling unsuccessful");
+
         updateBoard(
             {
                 type: "CASTLE",
@@ -179,7 +179,7 @@ export async function makeMove(
                         destinationPos: target.dataset.pos,
                     },
                     rook: {
-                        piece: state.Board.find((piece) => piece.pos === posA)!,
+                        piece: state.Board.get(posA)!,
                         destinationPos: posB,
                     },
                 },

@@ -10,3 +10,4 @@ export { updateBoard } from "./updateBoard";
 export { resetBoard } from "./resetBoard";
 export { resetGameState } from "./resetGameState";
 export { find } from "./find";
+export { getPieceValue } from "./getPieceValue";

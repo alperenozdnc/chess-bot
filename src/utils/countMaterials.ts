@@ -1,5 +1,6 @@
-import { Pieces, Values } from "@enums";
+import { Pieces } from "@enums";
 import { GameState } from "@interfaces";
+import { getPieceValue } from "@utils";
 
 export function countMaterials(state: GameState) {
     let white = 0;
@@ -8,12 +9,10 @@ export function countMaterials(state: GameState) {
     for (let [_, piece] of state.Board) {
         if (piece.id === Pieces.King) continue;
 
-        const value = piece.id as keyof typeof Values;
-
         if (piece.color === "white") {
-            white += Values[value];
+            white += getPieceValue(piece);
         } else {
-            black += Values[value];
+            white += getPieceValue(piece);
         }
     }
 

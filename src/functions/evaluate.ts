@@ -36,6 +36,8 @@ export function evaluate(state: GameState): number {
     let totalMaterial = 0;
     let selfKing;
     let enemyKing;
+    let selfBishopCount = 0;
+    let enemyBishopCount = 0;
 
     for (const [_, piece] of state.Board) {
         if (piece.id === Pieces.King) {
@@ -49,6 +51,15 @@ export function evaluate(state: GameState): number {
         }
 
         const sign = piece.color === state.botColor ? 1 : -1;
+
+        // reward bishop pairs
+        if (piece.id === Pieces.Bishop) {
+            if (sign === 1) {
+                selfBishopCount++;
+            } else {
+                enemyBishopCount++;
+            }
+        }
 
         const pieceValue = getPieceValue(piece);
         const squareValue = getSquareValueForPiece(piece, false);
@@ -90,6 +101,9 @@ export function evaluate(state: GameState): number {
     } else {
         console.error("error: king or enemy king not found on evaluation");
     }
+
+    if (selfBishopCount === 2) evaluation += 0.25;
+    if (enemyBishopCount === 2) evaluation -= 0.25;
 
     return evaluation;
 }

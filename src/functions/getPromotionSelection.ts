@@ -11,6 +11,7 @@ export async function getPromotionSelection(color: PieceColor): Promise<Piece> {
         Pieces.Knight,
         Pieces.Bishop,
     ];
+
     const PROMOTION_PIECES_ELEMENTS =
         PROMOTION_SCREEN.querySelectorAll(".piece-selection");
 
@@ -24,6 +25,7 @@ export async function getPromotionSelection(color: PieceColor): Promise<Piece> {
         IMAGE_ELEMENT.draggable = false;
         IMAGE_ELEMENT.classList.add("promotion-piece");
 
+        PROMOTION_PIECES_ELEMENTS[idx].innerHTML = "";
         PROMOTION_PIECES_ELEMENTS[idx].appendChild(IMAGE_ELEMENT);
     });
 

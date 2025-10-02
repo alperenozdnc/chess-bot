@@ -49,11 +49,35 @@ export function evaluate(state: GameState): number {
         }
 
         const sign = piece.color === state.botColor ? 1 : -1;
+
         const pieceValue = getPieceValue(piece);
         const squareValue = getSquareValueForPiece(piece, false);
 
         totalMaterial += pieceValue;
         evaluation += sign * (pieceValue + squareValue);
+
+        if (piece.id === Pieces.Pawn) {
+            const fileChar = piece.pos[0];
+            const fileIdx = FILES.indexOf(fileChar);
+            const rankIdx = Number(piece.pos[1]);
+
+            const up = state.Board.get(`${fileChar}${rankIdx + 1}`);
+            const down = state.Board.get(`${fileChar}${rankIdx - 1}`);
+            const left = state.Board.get(`${fileIdx - 1}${rankIdx}`);
+            const right = state.Board.get(`${fileIdx + 1}${rankIdx}`);
+
+            if (up) {
+                if (up.id === Pieces.Pawn && up.color === piece.color) {
+                    evaluation += sign * -0.25;
+                }
+            } else if (down) {
+                if (down.id === Pieces.Pawn && down.color === piece.color) {
+                    evaluation += sign * -0.25;
+                }
+            }
+
+            if (!left && !right) evaluation += sign * -0.25;
+        }
     }
 
     if (totalMaterial <= 18) isEndgame = true;

@@ -85,15 +85,15 @@ export function evaluate(state: GameState): number {
 
             if (up) {
                 if (up.id === Pieces.Pawn && up.color === piece.color) {
-                    evaluation += sign * -0.25;
+                    evaluation += sign * -1.2;
                 }
             } else if (down) {
                 if (down.id === Pieces.Pawn && down.color === piece.color) {
-                    evaluation += sign * -0.25;
+                    evaluation += sign * -1.2;
                 }
             }
 
-            if (!left && !right) evaluation += sign * -0.25;
+            if (!left && !right) evaluation += sign * -1.2;
             continue;
         }
 

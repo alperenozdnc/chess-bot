@@ -66,7 +66,7 @@ export function evaluate(state: GameState): number {
         const squareValue = getSquareValueForPiece(piece, false);
 
         totalMaterial += pieceValue;
-        evaluation += sign * (pieceValue + squareValue);
+        evaluation += sign * (pieceValue * 6.33 + squareValue);
 
         // discourage doubled and/or isolated pawns
         if (piece.id === Pieces.Pawn) {
@@ -76,7 +76,7 @@ export function evaluate(state: GameState): number {
             const endingRank = piece.color === "white" ? 8 : 1;
 
             // encourage pushing pawns
-            evaluation += sign * (endingRank - rankIdx * 0.1);
+            evaluation += sign * (endingRank - rankIdx * 1.5);
 
             const up = state.Board.get(`${fileChar}${rankIdx + 1}`);
             const down = state.Board.get(`${fileChar}${rankIdx - 1}`);
@@ -98,7 +98,7 @@ export function evaluate(state: GameState): number {
         }
 
         // reward piece activity
-        evaluation += sign * (listLegalMoves(state, piece).length * 0.1);
+        evaluation += sign * (listLegalMoves(state, piece).length * 0.66);
     }
 
     if (totalMaterial <= 18) isEndgame = true;
@@ -112,8 +112,8 @@ export function evaluate(state: GameState): number {
         console.error("error: king or enemy king not found on evaluation");
     }
 
-    if (selfBishopCount === 2) evaluation += 0.25;
-    if (enemyBishopCount === 2) evaluation -= 0.25;
+    if (selfBishopCount === 2) evaluation += 2;
+    if (enemyBishopCount === 2) evaluation -= 2;
 
     return evaluation;
 }

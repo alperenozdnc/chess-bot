@@ -73,6 +73,9 @@ export function evaluate(state: GameState): number {
             const fileChar = piece.pos[0];
             const fileIdx = FILES.indexOf(fileChar);
             const rankIdx = Number(piece.pos[1]);
+            const endingRank = piece.color === "white" ? 8 : 1;
+
+            evaluation += sign * (endingRank - rankIdx * 0.1);
 
             const up = state.Board.get(`${fileChar}${rankIdx + 1}`);
             const down = state.Board.get(`${fileChar}${rankIdx - 1}`);

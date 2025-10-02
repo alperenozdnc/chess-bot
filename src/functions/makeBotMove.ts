@@ -2,10 +2,10 @@ import { makeMove, findBestMove } from "@functions";
 import { GameState } from "@interfaces";
 
 export async function makeBotMove(state: GameState) {
-    let depth = 2;
+    let depth = 1;
 
-    if (state.moveIdx >= 25) depth++;
-    if (state.moveIdx >= 40) depth++;
+    if (state.moveIdx >= 50) depth++;
+    if (state.moveIdx >= 80) depth++;
 
     console.time("calc, depth=" + depth);
     const move = findBestMove(state, depth);

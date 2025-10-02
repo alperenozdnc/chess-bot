@@ -75,6 +75,7 @@ export function evaluate(state: GameState): number {
             const rankIdx = Number(piece.pos[1]);
             const endingRank = piece.color === "white" ? 8 : 1;
 
+            // encourage pushing pawns
             evaluation += sign * (endingRank - rankIdx * 0.1);
 
             const up = state.Board.get(`${fileChar}${rankIdx + 1}`);

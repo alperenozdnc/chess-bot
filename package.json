@@ -8,5 +8,8 @@
         "@types/node": "^24.3.1",
         "vite": "^7.1.4",
         "vite-tsconfig-paths": "^5.1.4"
+    },
+    "dependencies": {
+        "firebase": "^12.3.0"
     }
 }

@@ -74,8 +74,8 @@ export function evaluate(state: GameState): number {
 
             const up = state.Board.get(`${fileChar}${rankIdx + 1}`);
             const down = state.Board.get(`${fileChar}${rankIdx - 1}`);
-            const left = state.Board.get(`${fileIdx - 1}${rankIdx}`);
-            const right = state.Board.get(`${fileIdx + 1}${rankIdx}`);
+            const left = state.Board.get(`${FILES[fileIdx - 1]}${rankIdx}`);
+            const right = state.Board.get(`${FILES[fileIdx + 1]}${rankIdx}`);
 
             if (up) {
                 if (up.id === Pieces.Pawn && up.color === piece.color) {

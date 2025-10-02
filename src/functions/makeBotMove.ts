@@ -14,7 +14,7 @@ export async function makeBotMove(state: GameState) {
     if (!move) return;
 
     state.originalSquare = document.querySelector(
-        `[data-pos="${move.piece.pos}"`,
+        `[data-pos="${move.piece.pos}]"`,
     ) as HTMLDivElement;
 
     state.draggedPiece = state.originalSquare.firstChild as HTMLImageElement;

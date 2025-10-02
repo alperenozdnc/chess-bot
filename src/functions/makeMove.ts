@@ -96,8 +96,6 @@ export async function makeMove(
         return;
     }
 
-    state.FENPositions.push(getFEN());
-
     state.moveHighlights = [];
     state.moveHighlights.push(
         state.originalSquare!.dataset.pos as string,
@@ -186,6 +184,8 @@ export async function makeMove(
             state,
         );
     }
+
+    state.FENPositions.push(getFEN());
 
     drawBoard(state);
 

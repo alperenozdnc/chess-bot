@@ -2,8 +2,8 @@ import { FILES } from "@constants";
 import { Pieces } from "@enums";
 import { GameState, PieceData } from "@interfaces";
 import { SquareValueMap } from "@maps";
-import { getPieceValue } from "@utils";
-import { listLegalMoves } from "./listLegalMoves";
+import { getPieceValue, reverseColor } from "@utils";
+import { listLegalMoves, isSquareAttackedByColor } from "@functions";
 
 function getSquareValueForPiece(piece: PieceData, isEndgame: boolean) {
     const pos = piece.pos;
@@ -65,6 +65,19 @@ export function evaluate(state: GameState): number {
         const pieceValue = getPieceValue(piece);
         const squareValue = getSquareValueForPiece(piece, false);
 
+        const { isAttacked } = isSquareAttackedByColor(
+            state,
+            piece.pos,
+            reverseColor(piece.color),
+            false,
+        );
+
+        const ATTACK_WEIGHT = 5;
+
+        if (isAttacked) {
+            evaluation += -sign * pieceValue * ATTACK_WEIGHT;
+        }
+
         totalMaterial += pieceValue;
         evaluation += sign * (pieceValue * 6.33 + squareValue);
 
@@ -87,7 +100,9 @@ export function evaluate(state: GameState): number {
                 if (up.id === Pieces.Pawn && up.color === piece.color) {
                     evaluation += sign * -1.2;
                 }
-            } else if (down) {
+            }
+
+            if (down) {
                 if (down.id === Pieces.Pawn && down.color === piece.color) {
                     evaluation += sign * -1.2;
                 }

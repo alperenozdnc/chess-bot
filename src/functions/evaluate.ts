@@ -3,6 +3,7 @@ import { Pieces } from "@enums";
 import { GameState, PieceData } from "@interfaces";
 import { SquareValueMap } from "@maps";
 import { getPieceValue } from "@utils";
+import { listLegalMoves } from "./listLegalMoves";
 
 function getSquareValueForPiece(piece: PieceData, isEndgame: boolean) {
     const pos = piece.pos;
@@ -67,6 +68,7 @@ export function evaluate(state: GameState): number {
         totalMaterial += pieceValue;
         evaluation += sign * (pieceValue + squareValue);
 
+        // discourage doubled and/or isolated pawns
         if (piece.id === Pieces.Pawn) {
             const fileChar = piece.pos[0];
             const fileIdx = FILES.indexOf(fileChar);
@@ -88,7 +90,11 @@ export function evaluate(state: GameState): number {
             }
 
             if (!left && !right) evaluation += sign * -0.25;
+            continue;
         }
+
+        // reward piece activity
+        evaluation += sign * (listLegalMoves(state, piece).length * 0.1);
     }
 
     if (totalMaterial <= 18) isEndgame = true;

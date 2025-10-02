@@ -2,13 +2,9 @@ import { FILES } from "@constants";
 import { Pieces } from "@enums";
 import { GameState, PieceData } from "@interfaces";
 import { SquareValueMap } from "@maps";
-import { countMaterials } from "@utils";
+import { getPieceValue } from "@utils";
 
-function getSquareValueForPiece(
-    state: GameState,
-    piece: PieceData,
-    isEndgame: boolean,
-) {
+function getSquareValueForPiece(piece: PieceData, isEndgame: boolean) {
     const pos = piece.pos;
     const fileChar = pos[0];
     const rankIdx = Number(pos[1]);
@@ -28,8 +24,7 @@ function getSquareValueForPiece(
         (key as string) += "endgame";
     }
 
-    const sign = piece.color === state.botColor ? 1 : -1;
-    const value = sign * SquareValueMap.get(key)![mapIdx];
+    const value = SquareValueMap.get(key)![mapIdx];
 
     return value;
 }
@@ -38,18 +33,38 @@ export function evaluate(state: GameState): number {
     let evaluation = 0;
     let isEndgame = false;
 
-    const { white, black } = countMaterials(state);
-
-    if (state.botColor === "white") {
-        evaluation += white - black;
-    } else {
-        evaluation += black - white;
-    }
-
-    if (white + black <= 18) isEndgame = true;
+    let totalMaterial = 0;
+    let selfKing;
+    let enemyKing;
 
     for (const [_, piece] of state.Board) {
-        evaluation += getSquareValueForPiece(state, piece, isEndgame);
+        if (piece.id === Pieces.King) {
+            if (piece.color === state.botColor) {
+                selfKing = piece;
+                continue;
+            } else {
+                enemyKing = piece;
+                continue;
+            }
+        }
+
+        const sign = piece.color === state.botColor ? 1 : -1;
+        const pieceValue = getPieceValue(piece);
+        const squareValue = getSquareValueForPiece(piece, false);
+
+        totalMaterial += pieceValue;
+        evaluation += sign * (pieceValue + squareValue);
+    }
+
+    if (totalMaterial <= 18) isEndgame = true;
+
+    if (selfKing && enemyKing) {
+        const selfSquareVal = getSquareValueForPiece(selfKing, isEndgame);
+        const enemySquareVal = getSquareValueForPiece(enemyKing, isEndgame);
+
+        evaluation += selfSquareVal + -1 * enemySquareVal;
+    } else {
+        console.error("error: king or enemy king not found on evaluation");
     }
 
     return evaluation;

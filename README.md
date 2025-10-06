@@ -1,8 +1,7 @@
 # hobby chess bot
 
 just a simple chess engine that is written in typescript. made me realize how
-insufferably slow javascript can get when anything you do is remotely comput-
-ationally heavy.
+insufferably slow javascript can get when anything you do is remotely computationally heavy.
 
 ---
 

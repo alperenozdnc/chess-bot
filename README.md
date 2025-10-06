@@ -8,8 +8,8 @@ ationally heavy.
 
 ## some images
 
-[x](./assets/random-move.png)
-[y](./assets/highlight-move.png)
+![x](./assets/random-move.png)
+![y](./assets/highlight-move.png)
 
 ---
 

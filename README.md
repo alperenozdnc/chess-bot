@@ -8,8 +8,7 @@ ationally heavy.
 
 ## some images
 
-<img src="./assets/random-move.png" alt="preview 1" width="350"/>
-<img src="./assets/highlight-move.png" alt="preview 2" width="350"/>
+<img src="./assets/random-move.png" alt="preview 1" width="350"/> <img src="./assets/highlight-move.png" alt="preview 2" width="350"/>
 
 ---
 
